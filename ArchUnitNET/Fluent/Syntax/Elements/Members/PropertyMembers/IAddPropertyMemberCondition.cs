@@ -2,44 +2,44 @@
 
 namespace ArchUnitNET.Fluent.Syntax.Elements.Members.PropertyMembers
 {
-    public interface IAddPropertyMemberCondition<TReturnType, TRuleType>
-        : IAddMemberCondition<TReturnType, TRuleType>
+    public interface IAddPropertyMemberCondition<TNextElement, TRuleType>
+        : IAddMemberCondition<TNextElement, TRuleType>
         where TRuleType : ICanBeAnalyzed
     {
-        TReturnType HaveGetter();
-        TReturnType HavePrivateGetter();
-        TReturnType HavePublicGetter();
-        TReturnType HaveProtectedGetter();
-        TReturnType HaveInternalGetter();
-        TReturnType HaveProtectedInternalGetter();
-        TReturnType HavePrivateProtectedGetter();
-        TReturnType HaveSetter();
-        TReturnType HavePrivateSetter();
-        TReturnType HavePublicSetter();
-        TReturnType HaveProtectedSetter();
-        TReturnType HaveInternalSetter();
-        TReturnType HaveProtectedInternalSetter();
-        TReturnType HavePrivateProtectedSetter();
-        TReturnType HaveInitOnlySetter();
-        TReturnType BeVirtual();
+        TNextElement HaveGetter();
+        TNextElement HavePrivateGetter();
+        TNextElement HavePublicGetter();
+        TNextElement HaveProtectedGetter();
+        TNextElement HaveInternalGetter();
+        TNextElement HaveProtectedInternalGetter();
+        TNextElement HavePrivateProtectedGetter();
+        TNextElement HaveSetter();
+        TNextElement HavePrivateSetter();
+        TNextElement HavePublicSetter();
+        TNextElement HaveProtectedSetter();
+        TNextElement HaveInternalSetter();
+        TNextElement HaveProtectedInternalSetter();
+        TNextElement HavePrivateProtectedSetter();
+        TNextElement HaveInitOnlySetter();
+        TNextElement BeVirtual();
 
         //Negations
 
-        TReturnType NotHaveGetter();
-        TReturnType NotHavePrivateGetter();
-        TReturnType NotHavePublicGetter();
-        TReturnType NotHaveProtectedGetter();
-        TReturnType NotHaveInternalGetter();
-        TReturnType NotHaveProtectedInternalGetter();
-        TReturnType NotHavePrivateProtectedGetter();
-        TReturnType NotHaveSetter();
-        TReturnType NotHavePrivateSetter();
-        TReturnType NotHavePublicSetter();
-        TReturnType NotHaveProtectedSetter();
-        TReturnType NotHaveInternalSetter();
-        TReturnType NotHaveProtectedInternalSetter();
-        TReturnType NotHavePrivateProtectedSetter();
-        TReturnType NotHaveInitOnlySetter();
-        TReturnType NotBeVirtual();
+        TNextElement NotHaveGetter();
+        TNextElement NotHavePrivateGetter();
+        TNextElement NotHavePublicGetter();
+        TNextElement NotHaveProtectedGetter();
+        TNextElement NotHaveInternalGetter();
+        TNextElement NotHaveProtectedInternalGetter();
+        TNextElement NotHavePrivateProtectedGetter();
+        TNextElement NotHaveSetter();
+        TNextElement NotHavePrivateSetter();
+        TNextElement NotHavePublicSetter();
+        TNextElement NotHaveProtectedSetter();
+        TNextElement NotHaveInternalSetter();
+        TNextElement NotHaveProtectedInternalSetter();
+        TNextElement NotHavePrivateProtectedSetter();
+        TNextElement NotHaveInitOnlySetter();
+        TNextElement NotBeVirtual();
     }
 }

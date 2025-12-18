@@ -2,7 +2,7 @@
 
 namespace ArchUnitNET.Fluent.Syntax.Elements.Members.FieldMembers
 {
-    public interface IAddFieldMemberPredicate<out TReturnType, TRuleType>
-        : IAddMemberPredicate<TReturnType, TRuleType>
+    public interface IAddFieldMemberPredicate<out TNextElement, TRuleType>
+        : IAddMemberPredicate<TNextElement, TRuleType>
         where TRuleType : ICanBeAnalyzed { }
 }

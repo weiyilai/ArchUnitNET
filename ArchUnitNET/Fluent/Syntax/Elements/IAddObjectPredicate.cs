@@ -6,149 +6,149 @@ using Attribute = ArchUnitNET.Domain.Attribute;
 
 namespace ArchUnitNET.Fluent.Syntax.Elements
 {
-    public interface IAddObjectPredicate<out TReturnType, TRuleType>
+    public interface IAddObjectPredicate<out TNextElement, TRuleType>
         where TRuleType : ICanBeAnalyzed
     {
         // csharpier-ignore-start
 
-        TReturnType FollowCustomPredicate(IPredicate<TRuleType> predicate);
-        TReturnType FollowCustomPredicate(Func<TRuleType, bool> predicate, string description);
+        TNextElement FollowCustomPredicate(IPredicate<TRuleType> predicate);
+        TNextElement FollowCustomPredicate(Func<TRuleType, bool> predicate, string description);
 
-        TReturnType Are(params ICanBeAnalyzed[] objects);
-        TReturnType Are(IEnumerable<ICanBeAnalyzed> objects);
-        TReturnType Are(IObjectProvider<ICanBeAnalyzed> objects);
+        TNextElement Are(params ICanBeAnalyzed[] objects);
+        TNextElement Are(IEnumerable<ICanBeAnalyzed> objects);
+        TNextElement Are(IObjectProvider<ICanBeAnalyzed> objects);
 
-        TReturnType CallAny(params MethodMember[] methods);
-        TReturnType CallAny(IEnumerable<MethodMember> methods);
-        TReturnType CallAny(IObjectProvider<MethodMember> methods);
+        TNextElement CallAny(params MethodMember[] methods);
+        TNextElement CallAny(IEnumerable<MethodMember> methods);
+        TNextElement CallAny(IObjectProvider<MethodMember> methods);
 
-        TReturnType DependOnAny();
-        TReturnType DependOnAny(params IType[] types);
-        TReturnType DependOnAny(params Type[] types);
-        TReturnType DependOnAny(IEnumerable<IType> types);
-        TReturnType DependOnAny(IEnumerable<Type> types);
-        TReturnType DependOnAny(IObjectProvider<IType> types);
+        TNextElement DependOnAny();
+        TNextElement DependOnAny(params IType[] types);
+        TNextElement DependOnAny(params Type[] types);
+        TNextElement DependOnAny(IEnumerable<IType> types);
+        TNextElement DependOnAny(IEnumerable<Type> types);
+        TNextElement DependOnAny(IObjectProvider<IType> types);
 
-        TReturnType OnlyDependOn();
-        TReturnType OnlyDependOn(params IType[] types);
-        TReturnType OnlyDependOn(params Type[] types);
-        TReturnType OnlyDependOn(IEnumerable<IType> types);
-        TReturnType OnlyDependOn(IEnumerable<Type> types);
-        TReturnType OnlyDependOn(IObjectProvider<IType> types);
+        TNextElement OnlyDependOn();
+        TNextElement OnlyDependOn(params IType[] types);
+        TNextElement OnlyDependOn(params Type[] types);
+        TNextElement OnlyDependOn(IEnumerable<IType> types);
+        TNextElement OnlyDependOn(IEnumerable<Type> types);
+        TNextElement OnlyDependOn(IObjectProvider<IType> types);
 
-        TReturnType HaveAnyAttributes();
-        TReturnType HaveAnyAttributes(params Attribute[] attributes);
-        TReturnType HaveAnyAttributes(params Type[] attributes);
-        TReturnType HaveAnyAttributes(IEnumerable<Attribute> attributes);
-        TReturnType HaveAnyAttributes(IEnumerable<Type> attributes);
-        TReturnType HaveAnyAttributes(IObjectProvider<Attribute> attributes);
+        TNextElement HaveAnyAttributes();
+        TNextElement HaveAnyAttributes(params Attribute[] attributes);
+        TNextElement HaveAnyAttributes(params Type[] attributes);
+        TNextElement HaveAnyAttributes(IEnumerable<Attribute> attributes);
+        TNextElement HaveAnyAttributes(IEnumerable<Type> attributes);
+        TNextElement HaveAnyAttributes(IObjectProvider<Attribute> attributes);
 
-        TReturnType OnlyHaveAttributes();
-        TReturnType OnlyHaveAttributes(params Attribute[] attributes);
-        TReturnType OnlyHaveAttributes(params Type[] attributes);
-        TReturnType OnlyHaveAttributes(IEnumerable<Attribute> attributes);
-        TReturnType OnlyHaveAttributes(IEnumerable<Type> attributes);
-        TReturnType OnlyHaveAttributes(IObjectProvider<Attribute> attributes);
+        TNextElement OnlyHaveAttributes();
+        TNextElement OnlyHaveAttributes(params Attribute[] attributes);
+        TNextElement OnlyHaveAttributes(params Type[] attributes);
+        TNextElement OnlyHaveAttributes(IEnumerable<Attribute> attributes);
+        TNextElement OnlyHaveAttributes(IEnumerable<Type> attributes);
+        TNextElement OnlyHaveAttributes(IObjectProvider<Attribute> attributes);
 
-        TReturnType HaveAnyAttributesWithArguments(IEnumerable<object> argumentValues);
+        TNextElement HaveAnyAttributesWithArguments(IEnumerable<object> argumentValues);
 
-        TReturnType HaveAttributeWithArguments(Attribute attribute, IEnumerable<object> argumentValues);
-        TReturnType HaveAttributeWithArguments(Type attribute, IEnumerable<object> argumentValues);
+        TNextElement HaveAttributeWithArguments(Attribute attribute, IEnumerable<object> argumentValues);
+        TNextElement HaveAttributeWithArguments(Type attribute, IEnumerable<object> argumentValues);
 
-        TReturnType HaveAnyAttributesWithNamedArguments(IEnumerable<(string, object)> attributeArguments);
-        TReturnType HaveAnyAttributesWithNamedArguments(params (string, object)[] attributeArguments);
+        TNextElement HaveAnyAttributesWithNamedArguments(IEnumerable<(string, object)> attributeArguments);
+        TNextElement HaveAnyAttributesWithNamedArguments(params (string, object)[] attributeArguments);
 
-        TReturnType HaveAttributeWithNamedArguments(Attribute attribute, IEnumerable<(string, object)> attributeArguments);
-        TReturnType HaveAttributeWithNamedArguments(Attribute attribute, params (string, object)[] attributeArguments);
-        TReturnType HaveAttributeWithNamedArguments(Type attribute, IEnumerable<(string, object)> attributeArguments);
-        TReturnType HaveAttributeWithNamedArguments(Type attribute, params (string, object)[] attributeArguments);
+        TNextElement HaveAttributeWithNamedArguments(Attribute attribute, IEnumerable<(string, object)> attributeArguments);
+        TNextElement HaveAttributeWithNamedArguments(Attribute attribute, params (string, object)[] attributeArguments);
+        TNextElement HaveAttributeWithNamedArguments(Type attribute, IEnumerable<(string, object)> attributeArguments);
+        TNextElement HaveAttributeWithNamedArguments(Type attribute, params (string, object)[] attributeArguments);
 
-        TReturnType HaveName(string name);
-        TReturnType HaveNameMatching(string pattern);
-        TReturnType HaveNameStartingWith(string pattern);
-        TReturnType HaveNameEndingWith(string pattern);
-        TReturnType HaveNameContaining(string pattern);
+        TNextElement HaveName(string name);
+        TNextElement HaveNameMatching(string pattern);
+        TNextElement HaveNameStartingWith(string pattern);
+        TNextElement HaveNameEndingWith(string pattern);
+        TNextElement HaveNameContaining(string pattern);
 
-        TReturnType HaveFullName(string fullName);
-        TReturnType HaveFullNameMatching(string pattern);
-        TReturnType HaveFullNameStartingWith(string pattern);
-        TReturnType HaveFullNameEndingWith(string pattern);
-        TReturnType HaveFullNameContaining(string pattern);
+        TNextElement HaveFullName(string fullName);
+        TNextElement HaveFullNameMatching(string pattern);
+        TNextElement HaveFullNameStartingWith(string pattern);
+        TNextElement HaveFullNameEndingWith(string pattern);
+        TNextElement HaveFullNameContaining(string pattern);
 
-        TReturnType HaveAssemblyQualifiedName(string assemblyQualifiedName);
-        TReturnType HaveAssemblyQualifiedNameMatching(string pattern);
-        TReturnType HaveAssemblyQualifiedNameStartingWith(string pattern);
-        TReturnType HaveAssemblyQualifiedNameEndingWith(string pattern);
-        TReturnType HaveAssemblyQualifiedNameContaining(string pattern);
+        TNextElement HaveAssemblyQualifiedName(string assemblyQualifiedName);
+        TNextElement HaveAssemblyQualifiedNameMatching(string pattern);
+        TNextElement HaveAssemblyQualifiedNameStartingWith(string pattern);
+        TNextElement HaveAssemblyQualifiedNameEndingWith(string pattern);
+        TNextElement HaveAssemblyQualifiedNameContaining(string pattern);
 
-        TReturnType ArePrivate();
-        TReturnType ArePublic();
-        TReturnType AreProtected();
-        TReturnType AreInternal();
-        TReturnType AreProtectedInternal();
-        TReturnType ArePrivateProtected();
+        TNextElement ArePrivate();
+        TNextElement ArePublic();
+        TNextElement AreProtected();
+        TNextElement AreInternal();
+        TNextElement AreProtectedInternal();
+        TNextElement ArePrivateProtected();
 
         //Negations
 
-        TReturnType AreNot(params ICanBeAnalyzed[] objects);
-        TReturnType AreNot(IEnumerable<ICanBeAnalyzed> objects);
-        TReturnType AreNot(IObjectProvider<ICanBeAnalyzed> objects);
+        TNextElement AreNot(params ICanBeAnalyzed[] objects);
+        TNextElement AreNot(IEnumerable<ICanBeAnalyzed> objects);
+        TNextElement AreNot(IObjectProvider<ICanBeAnalyzed> objects);
 
-        TReturnType DoNotCallAny(params MethodMember[] methods);
-        TReturnType DoNotCallAny(IEnumerable<MethodMember> methods);
-        TReturnType DoNotCallAny(IObjectProvider<MethodMember> methods);
+        TNextElement DoNotCallAny(params MethodMember[] methods);
+        TNextElement DoNotCallAny(IEnumerable<MethodMember> methods);
+        TNextElement DoNotCallAny(IObjectProvider<MethodMember> methods);
 
-        TReturnType DoNotDependOnAny();
-        TReturnType DoNotDependOnAny(params IType[] types);
-        TReturnType DoNotDependOnAny(params Type[] types);
-        TReturnType DoNotDependOnAny(IObjectProvider<IType> types);
-        TReturnType DoNotDependOnAny(IEnumerable<IType> types);
-        TReturnType DoNotDependOnAny(IEnumerable<Type> types);
+        TNextElement DoNotDependOnAny();
+        TNextElement DoNotDependOnAny(params IType[] types);
+        TNextElement DoNotDependOnAny(params Type[] types);
+        TNextElement DoNotDependOnAny(IObjectProvider<IType> types);
+        TNextElement DoNotDependOnAny(IEnumerable<IType> types);
+        TNextElement DoNotDependOnAny(IEnumerable<Type> types);
 
-        TReturnType DoNotHaveAnyAttributes();
-        TReturnType DoNotHaveAnyAttributes(params Attribute[] attributes);
-        TReturnType DoNotHaveAnyAttributes(params Type[] attributes);
-        TReturnType DoNotHaveAnyAttributes(IObjectProvider<Attribute> attributes);
-        TReturnType DoNotHaveAnyAttributes(IEnumerable<Attribute> attributes);
-        TReturnType DoNotHaveAnyAttributes(IEnumerable<Type> attributes);
+        TNextElement DoNotHaveAnyAttributes();
+        TNextElement DoNotHaveAnyAttributes(params Attribute[] attributes);
+        TNextElement DoNotHaveAnyAttributes(params Type[] attributes);
+        TNextElement DoNotHaveAnyAttributes(IObjectProvider<Attribute> attributes);
+        TNextElement DoNotHaveAnyAttributes(IEnumerable<Attribute> attributes);
+        TNextElement DoNotHaveAnyAttributes(IEnumerable<Type> attributes);
 
-        TReturnType DoNotHaveAnyAttributesWithArguments(IEnumerable<object> argumentValues);
+        TNextElement DoNotHaveAnyAttributesWithArguments(IEnumerable<object> argumentValues);
 
-        TReturnType DoNotHaveAttributeWithArguments(Attribute attribute, IEnumerable<object> argumentValues);
-        TReturnType DoNotHaveAttributeWithArguments(Type attribute, IEnumerable<object> argumentValues);
+        TNextElement DoNotHaveAttributeWithArguments(Attribute attribute, IEnumerable<object> argumentValues);
+        TNextElement DoNotHaveAttributeWithArguments(Type attribute, IEnumerable<object> argumentValues);
 
-        TReturnType DoNotHaveAnyAttributesWithNamedArguments(IEnumerable<(string, object)> attributeArguments);
-        TReturnType DoNotHaveAnyAttributesWithNamedArguments(params (string, object)[] attributeArguments);
+        TNextElement DoNotHaveAnyAttributesWithNamedArguments(IEnumerable<(string, object)> attributeArguments);
+        TNextElement DoNotHaveAnyAttributesWithNamedArguments(params (string, object)[] attributeArguments);
 
-        TReturnType DoNotHaveAttributeWithNamedArguments(Attribute attribute, IEnumerable<(string, object)> attributeArguments);
-        TReturnType DoNotHaveAttributeWithNamedArguments(Attribute attribute, params (string, object)[] attributeArguments);
-        TReturnType DoNotHaveAttributeWithNamedArguments(Type attribute, IEnumerable<(string, object)> attributeArguments);
-        TReturnType DoNotHaveAttributeWithNamedArguments(Type attribute, params (string, object)[] attributeArguments);
+        TNextElement DoNotHaveAttributeWithNamedArguments(Attribute attribute, IEnumerable<(string, object)> attributeArguments);
+        TNextElement DoNotHaveAttributeWithNamedArguments(Attribute attribute, params (string, object)[] attributeArguments);
+        TNextElement DoNotHaveAttributeWithNamedArguments(Type attribute, IEnumerable<(string, object)> attributeArguments);
+        TNextElement DoNotHaveAttributeWithNamedArguments(Type attribute, params (string, object)[] attributeArguments);
 
-        TReturnType DoNotHaveName(string name);
-        TReturnType DoNotHaveNameMatching(string pattern);
-        TReturnType DoNotHaveNameStartingWith(string pattern);
-        TReturnType DoNotHaveNameEndingWith(string pattern);
-        TReturnType DoNotHaveNameContaining(string pattern);
+        TNextElement DoNotHaveName(string name);
+        TNextElement DoNotHaveNameMatching(string pattern);
+        TNextElement DoNotHaveNameStartingWith(string pattern);
+        TNextElement DoNotHaveNameEndingWith(string pattern);
+        TNextElement DoNotHaveNameContaining(string pattern);
 
-        TReturnType DoNotHaveFullName(string fullName);
-        TReturnType DoNotHaveFullNameMatching(string pattern);
-        TReturnType DoNotHaveFullNameStartingWith(string pattern);
-        TReturnType DoNotHaveFullNameEndingWith(string pattern);
-        TReturnType DoNotHaveFullNameContaining(string pattern);
+        TNextElement DoNotHaveFullName(string fullName);
+        TNextElement DoNotHaveFullNameMatching(string pattern);
+        TNextElement DoNotHaveFullNameStartingWith(string pattern);
+        TNextElement DoNotHaveFullNameEndingWith(string pattern);
+        TNextElement DoNotHaveFullNameContaining(string pattern);
 
-        TReturnType DoNotHaveAssemblyQualifiedName(string assemblyQualifiedName);
-        TReturnType DoNotHaveAssemblyQualifiedNameMatching(string pattern);
-        TReturnType DoNotHaveAssemblyQualifiedNameStartingWith(string pattern);
-        TReturnType DoNotHaveAssemblyQualifiedNameEndingWith(string pattern);
-        TReturnType DoNotHaveAssemblyQualifiedNameContaining(string pattern);
+        TNextElement DoNotHaveAssemblyQualifiedName(string assemblyQualifiedName);
+        TNextElement DoNotHaveAssemblyQualifiedNameMatching(string pattern);
+        TNextElement DoNotHaveAssemblyQualifiedNameStartingWith(string pattern);
+        TNextElement DoNotHaveAssemblyQualifiedNameEndingWith(string pattern);
+        TNextElement DoNotHaveAssemblyQualifiedNameContaining(string pattern);
 
-        TReturnType AreNotPrivate();
-        TReturnType AreNotPublic();
-        TReturnType AreNotProtected();
-        TReturnType AreNotInternal();
-        TReturnType AreNotProtectedInternal();
-        TReturnType AreNotPrivateProtected();
+        TNextElement AreNotPrivate();
+        TNextElement AreNotPublic();
+        TNextElement AreNotProtected();
+        TNextElement AreNotInternal();
+        TNextElement AreNotProtectedInternal();
+        TNextElement AreNotPrivateProtected();
 
         // csharpier-ignore-end
     }

@@ -2,7 +2,7 @@
 
 namespace ArchUnitNET.Fluent.Syntax.Elements.Types.Interfaces
 {
-    public interface IAddInterfaceCondition<TReturnType, TRuleType>
-        : IAddTypeCondition<TReturnType, TRuleType>
+    public interface IAddInterfaceCondition<TNextElement, TRuleType>
+        : IAddTypeCondition<TNextElement, TRuleType>
         where TRuleType : ICanBeAnalyzed { }
 }

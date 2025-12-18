@@ -2,18 +2,18 @@
 
 namespace ArchUnitNET.Fluent.Syntax.Elements.Types.Classes
 {
-    public interface IAddClassCondition<TReturnType, TRuleType>
-        : IAddTypeCondition<TReturnType, TRuleType>
+    public interface IAddClassCondition<TNextElement, TRuleType>
+        : IAddTypeCondition<TNextElement, TRuleType>
         where TRuleType : ICanBeAnalyzed
     {
-        TReturnType BeAbstract();
-        TReturnType BeSealed();
-        TReturnType BeImmutable();
+        TNextElement BeAbstract();
+        TNextElement BeSealed();
+        TNextElement BeImmutable();
 
         //Negations
 
-        TReturnType NotBeAbstract();
-        TReturnType NotBeSealed();
-        TReturnType NotBeImmutable();
+        TNextElement NotBeAbstract();
+        TNextElement NotBeSealed();
+        TNextElement NotBeImmutable();
     }
 }

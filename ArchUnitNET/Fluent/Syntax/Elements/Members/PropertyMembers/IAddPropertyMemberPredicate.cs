@@ -2,44 +2,44 @@
 
 namespace ArchUnitNET.Fluent.Syntax.Elements.Members.PropertyMembers
 {
-    public interface IAddPropertyMemberPredicate<out TRuleTypeConjunction, TRuleType>
-        : IAddMemberPredicate<TRuleTypeConjunction, TRuleType>
+    public interface IAddPropertyMemberPredicate<out TNextElement, TRuleType>
+        : IAddMemberPredicate<TNextElement, TRuleType>
         where TRuleType : ICanBeAnalyzed
     {
-        TRuleTypeConjunction HaveGetter();
-        TRuleTypeConjunction HavePrivateGetter();
-        TRuleTypeConjunction HavePublicGetter();
-        TRuleTypeConjunction HaveProtectedGetter();
-        TRuleTypeConjunction HaveInternalGetter();
-        TRuleTypeConjunction HaveProtectedInternalGetter();
-        TRuleTypeConjunction HavePrivateProtectedGetter();
-        TRuleTypeConjunction HaveSetter();
-        TRuleTypeConjunction HavePrivateSetter();
-        TRuleTypeConjunction HavePublicSetter();
-        TRuleTypeConjunction HaveProtectedSetter();
-        TRuleTypeConjunction HaveInternalSetter();
-        TRuleTypeConjunction HaveProtectedInternalSetter();
-        TRuleTypeConjunction HavePrivateProtectedSetter();
-        TRuleTypeConjunction HaveInitOnlySetter();
-        TRuleTypeConjunction AreVirtual();
+        TNextElement HaveGetter();
+        TNextElement HavePrivateGetter();
+        TNextElement HavePublicGetter();
+        TNextElement HaveProtectedGetter();
+        TNextElement HaveInternalGetter();
+        TNextElement HaveProtectedInternalGetter();
+        TNextElement HavePrivateProtectedGetter();
+        TNextElement HaveSetter();
+        TNextElement HavePrivateSetter();
+        TNextElement HavePublicSetter();
+        TNextElement HaveProtectedSetter();
+        TNextElement HaveInternalSetter();
+        TNextElement HaveProtectedInternalSetter();
+        TNextElement HavePrivateProtectedSetter();
+        TNextElement HaveInitOnlySetter();
+        TNextElement AreVirtual();
 
         //Negations
 
-        TRuleTypeConjunction HaveNoGetter();
-        TRuleTypeConjunction DoNotHavePrivateGetter();
-        TRuleTypeConjunction DoNotHavePublicGetter();
-        TRuleTypeConjunction DoNotHaveProtectedGetter();
-        TRuleTypeConjunction DoNotHaveInternalGetter();
-        TRuleTypeConjunction DoNotHaveProtectedInternalGetter();
-        TRuleTypeConjunction DoNotHavePrivateProtectedGetter();
-        TRuleTypeConjunction HaveNoSetter();
-        TRuleTypeConjunction DoNotHavePrivateSetter();
-        TRuleTypeConjunction DoNotHavePublicSetter();
-        TRuleTypeConjunction DoNotHaveProtectedSetter();
-        TRuleTypeConjunction DoNotHaveInternalSetter();
-        TRuleTypeConjunction DoNotHaveProtectedInternalSetter();
-        TRuleTypeConjunction DoNotHavePrivateProtectedSetter();
-        TRuleTypeConjunction DoNotHaveInitOnlySetter();
-        TRuleTypeConjunction AreNotVirtual();
+        TNextElement HaveNoGetter();
+        TNextElement DoNotHavePrivateGetter();
+        TNextElement DoNotHavePublicGetter();
+        TNextElement DoNotHaveProtectedGetter();
+        TNextElement DoNotHaveInternalGetter();
+        TNextElement DoNotHaveProtectedInternalGetter();
+        TNextElement DoNotHavePrivateProtectedGetter();
+        TNextElement HaveNoSetter();
+        TNextElement DoNotHavePrivateSetter();
+        TNextElement DoNotHavePublicSetter();
+        TNextElement DoNotHaveProtectedSetter();
+        TNextElement DoNotHaveInternalSetter();
+        TNextElement DoNotHaveProtectedInternalSetter();
+        TNextElement DoNotHavePrivateProtectedSetter();
+        TNextElement DoNotHaveInitOnlySetter();
+        TNextElement AreNotVirtual();
     }
 }

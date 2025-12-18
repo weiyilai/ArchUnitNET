@@ -5,85 +5,85 @@ using Assembly = System.Reflection.Assembly;
 
 namespace ArchUnitNET.Fluent.Syntax.Elements.Types
 {
-    public interface IAddTypePredicate<out TReturnType, TRuleType>
-        : IAddObjectPredicate<TReturnType, TRuleType>
+    public interface IAddTypePredicate<out TNextElement, TRuleType>
+        : IAddObjectPredicate<TNextElement, TRuleType>
         where TRuleType : ICanBeAnalyzed
     {
-        TReturnType Are(Type firstType, params Type[] moreTypes);
-        TReturnType Are(IEnumerable<Type> types);
+        TNextElement Are(Type firstType, params Type[] moreTypes);
+        TNextElement Are(IEnumerable<Type> types);
 
-        TReturnType AreAssignableTo(IType firstType, params IType[] moreTypes);
-        TReturnType AreAssignableTo(Type type, params Type[] moreTypes);
-        TReturnType AreAssignableTo(IObjectProvider<IType> types);
-        TReturnType AreAssignableTo(IEnumerable<IType> types);
-        TReturnType AreAssignableTo(IEnumerable<Type> types);
-        TReturnType AreValueTypes();
-        TReturnType AreEnums();
-        TReturnType AreStructs();
+        TNextElement AreAssignableTo(IType firstType, params IType[] moreTypes);
+        TNextElement AreAssignableTo(Type type, params Type[] moreTypes);
+        TNextElement AreAssignableTo(IObjectProvider<IType> types);
+        TNextElement AreAssignableTo(IEnumerable<IType> types);
+        TNextElement AreAssignableTo(IEnumerable<Type> types);
+        TNextElement AreValueTypes();
+        TNextElement AreEnums();
+        TNextElement AreStructs();
 
-        TReturnType ImplementInterface(Interface intf);
-        TReturnType ImplementInterface(Type intf);
+        TNextElement ImplementInterface(Interface intf);
+        TNextElement ImplementInterface(Type intf);
 
-        TReturnType ImplementAnyInterfaces();
-        TReturnType ImplementAnyInterfaces(params Interface[] interfaces);
-        TReturnType ImplementAnyInterfaces(params Type[] interfaces);
-        TReturnType ImplementAnyInterfaces(IEnumerable<Interface> interfaces);
-        TReturnType ImplementAnyInterfaces(IEnumerable<Type> interfaces);
-        TReturnType ImplementAnyInterfaces(IObjectProvider<Interface> interfaces);
+        TNextElement ImplementAnyInterfaces();
+        TNextElement ImplementAnyInterfaces(params Interface[] interfaces);
+        TNextElement ImplementAnyInterfaces(params Type[] interfaces);
+        TNextElement ImplementAnyInterfaces(IEnumerable<Interface> interfaces);
+        TNextElement ImplementAnyInterfaces(IEnumerable<Type> interfaces);
+        TNextElement ImplementAnyInterfaces(IObjectProvider<Interface> interfaces);
 
-        TReturnType ResideInNamespace(string fullName);
-        TReturnType ResideInNamespaceMatching(string pattern);
+        TNextElement ResideInNamespace(string fullName);
+        TNextElement ResideInNamespaceMatching(string pattern);
 
-        TReturnType ResideInAssembly(string fullName);
-        TReturnType ResideInAssemblyMatching(string pattern);
-        TReturnType ResideInAssembly(Assembly assembly, params Assembly[] moreAssemblies);
-        TReturnType ResideInAssembly(
+        TNextElement ResideInAssembly(string fullName);
+        TNextElement ResideInAssemblyMatching(string pattern);
+        TNextElement ResideInAssembly(Assembly assembly, params Assembly[] moreAssemblies);
+        TNextElement ResideInAssembly(
             Domain.Assembly assembly,
             params Domain.Assembly[] moreAssemblies
         );
-        TReturnType HavePropertyMemberWithName(string name);
-        TReturnType HaveFieldMemberWithName(string name);
-        TReturnType HaveMethodMemberWithName(string name);
-        TReturnType HaveMemberWithName(string name);
-        TReturnType AreNested();
+        TNextElement HavePropertyMemberWithName(string name);
+        TNextElement HaveFieldMemberWithName(string name);
+        TNextElement HaveMethodMemberWithName(string name);
+        TNextElement HaveMemberWithName(string name);
+        TNextElement AreNested();
 
         //Negations
 
-        TReturnType AreNot(Type firstType, params Type[] moreTypes);
-        TReturnType AreNot(IEnumerable<Type> types);
+        TNextElement AreNot(Type firstType, params Type[] moreTypes);
+        TNextElement AreNot(IEnumerable<Type> types);
 
-        TReturnType AreNotAssignableTo(IType type, params IType[] moreTypes);
-        TReturnType AreNotAssignableTo(Type type, params Type[] moreTypes);
-        TReturnType AreNotAssignableTo(IObjectProvider<IType> types);
-        TReturnType AreNotAssignableTo(IEnumerable<IType> types);
-        TReturnType AreNotAssignableTo(IEnumerable<Type> types);
-        TReturnType AreNotValueTypes();
-        TReturnType AreNotEnums();
-        TReturnType AreNotStructs();
+        TNextElement AreNotAssignableTo(IType type, params IType[] moreTypes);
+        TNextElement AreNotAssignableTo(Type type, params Type[] moreTypes);
+        TNextElement AreNotAssignableTo(IObjectProvider<IType> types);
+        TNextElement AreNotAssignableTo(IEnumerable<IType> types);
+        TNextElement AreNotAssignableTo(IEnumerable<Type> types);
+        TNextElement AreNotValueTypes();
+        TNextElement AreNotEnums();
+        TNextElement AreNotStructs();
 
-        TReturnType DoNotImplementInterface(Interface intf);
-        TReturnType DoNotImplementInterface(Type intf);
+        TNextElement DoNotImplementInterface(Interface intf);
+        TNextElement DoNotImplementInterface(Type intf);
 
-        TReturnType DoNotImplementAnyInterfaces();
-        TReturnType DoNotImplementAnyInterfaces(params Interface[] interfaces);
-        TReturnType DoNotImplementAnyInterfaces(params Type[] interfaces);
-        TReturnType DoNotImplementAnyInterfaces(IEnumerable<Interface> interfaces);
-        TReturnType DoNotImplementAnyInterfaces(IEnumerable<Type> interfaces);
-        TReturnType DoNotImplementAnyInterfaces(IObjectProvider<Interface> interfaces);
+        TNextElement DoNotImplementAnyInterfaces();
+        TNextElement DoNotImplementAnyInterfaces(params Interface[] interfaces);
+        TNextElement DoNotImplementAnyInterfaces(params Type[] interfaces);
+        TNextElement DoNotImplementAnyInterfaces(IEnumerable<Interface> interfaces);
+        TNextElement DoNotImplementAnyInterfaces(IEnumerable<Type> interfaces);
+        TNextElement DoNotImplementAnyInterfaces(IObjectProvider<Interface> interfaces);
 
-        TReturnType DoNotResideInNamespace(string fullName);
+        TNextElement DoNotResideInNamespace(string fullName);
 
-        TReturnType DoNotResideInAssembly(string fullName);
-        TReturnType DoNotResideInAssemblyMatching(string pattern);
-        TReturnType DoNotResideInAssembly(Assembly assembly, params Assembly[] moreAssemblies);
-        TReturnType DoNotResideInAssembly(
+        TNextElement DoNotResideInAssembly(string fullName);
+        TNextElement DoNotResideInAssemblyMatching(string pattern);
+        TNextElement DoNotResideInAssembly(Assembly assembly, params Assembly[] moreAssemblies);
+        TNextElement DoNotResideInAssembly(
             Domain.Assembly assembly,
             params Domain.Assembly[] moreAssemblies
         );
-        TReturnType DoNotHavePropertyMemberWithName(string name);
-        TReturnType DoNotHaveFieldMemberWithName(string name);
-        TReturnType DoNotHaveMethodMemberWithName(string name);
-        TReturnType DoNotHaveMemberWithName(string name);
-        TReturnType AreNotNested();
+        TNextElement DoNotHavePropertyMemberWithName(string name);
+        TNextElement DoNotHaveFieldMemberWithName(string name);
+        TNextElement DoNotHaveMethodMemberWithName(string name);
+        TNextElement DoNotHaveMemberWithName(string name);
+        TNextElement AreNotNested();
     }
 }

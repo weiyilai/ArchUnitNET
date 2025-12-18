@@ -4,52 +4,52 @@ using ArchUnitNET.Domain;
 
 namespace ArchUnitNET.Fluent.Syntax.Elements.Members.MethodMembers
 {
-    public interface IAddMethodMemberPredicate<out TRuleTypeConjunction, TRuleType>
-        : IAddMemberPredicate<TRuleTypeConjunction, TRuleType>
+    public interface IAddMethodMemberPredicate<out TNextElement, TRuleType>
+        : IAddMemberPredicate<TNextElement, TRuleType>
         where TRuleType : ICanBeAnalyzed
     {
-        TRuleTypeConjunction AreConstructors();
-        TRuleTypeConjunction AreVirtual();
+        TNextElement AreConstructors();
+        TNextElement AreVirtual();
 
-        TRuleTypeConjunction AreCalledBy(IType firstType, params IType[] moreTypes);
-        TRuleTypeConjunction AreCalledBy(Type type, params Type[] moreTypes);
-        TRuleTypeConjunction AreCalledBy(IObjectProvider<IType> types);
-        TRuleTypeConjunction AreCalledBy(IEnumerable<IType> types);
-        TRuleTypeConjunction AreCalledBy(IEnumerable<Type> types);
+        TNextElement AreCalledBy(IType firstType, params IType[] moreTypes);
+        TNextElement AreCalledBy(Type type, params Type[] moreTypes);
+        TNextElement AreCalledBy(IObjectProvider<IType> types);
+        TNextElement AreCalledBy(IEnumerable<IType> types);
+        TNextElement AreCalledBy(IEnumerable<Type> types);
 
-        TRuleTypeConjunction HaveDependencyInMethodBodyTo(IType firstType, params IType[] moreTypes);
-        TRuleTypeConjunction HaveDependencyInMethodBodyTo(Type type, params Type[] moreTypes);
-        TRuleTypeConjunction HaveDependencyInMethodBodyTo(IObjectProvider<IType> types);
-        TRuleTypeConjunction HaveDependencyInMethodBodyTo(IEnumerable<IType> types);
-        TRuleTypeConjunction HaveDependencyInMethodBodyTo(IEnumerable<Type> types);
+        TNextElement HaveDependencyInMethodBodyTo(IType firstType, params IType[] moreTypes);
+        TNextElement HaveDependencyInMethodBodyTo(Type type, params Type[] moreTypes);
+        TNextElement HaveDependencyInMethodBodyTo(IObjectProvider<IType> types);
+        TNextElement HaveDependencyInMethodBodyTo(IEnumerable<IType> types);
+        TNextElement HaveDependencyInMethodBodyTo(IEnumerable<Type> types);
 
-        TRuleTypeConjunction HaveReturnType(IType firstType, params IType[] moreTypes);
-        TRuleTypeConjunction HaveReturnType(IEnumerable<IType> types);
-        TRuleTypeConjunction HaveReturnType(IObjectProvider<IType> types);
-        TRuleTypeConjunction HaveReturnType(Type type, params Type[] moreTypes);
-        TRuleTypeConjunction HaveReturnType(IEnumerable<Type> types);
+        TNextElement HaveReturnType(IType firstType, params IType[] moreTypes);
+        TNextElement HaveReturnType(IEnumerable<IType> types);
+        TNextElement HaveReturnType(IObjectProvider<IType> types);
+        TNextElement HaveReturnType(Type type, params Type[] moreTypes);
+        TNextElement HaveReturnType(IEnumerable<Type> types);
 
         //Negations
 
-        TRuleTypeConjunction AreNoConstructors();
-        TRuleTypeConjunction AreNotVirtual();
+        TNextElement AreNoConstructors();
+        TNextElement AreNotVirtual();
 
-        TRuleTypeConjunction AreNotCalledBy(IType firstType, params IType[] moreTypes);
-        TRuleTypeConjunction AreNotCalledBy(Type type, params Type[] moreTypes);
-        TRuleTypeConjunction AreNotCalledBy(IObjectProvider<IType> types);
-        TRuleTypeConjunction AreNotCalledBy(IEnumerable<IType> types);
-        TRuleTypeConjunction AreNotCalledBy(IEnumerable<Type> types);
+        TNextElement AreNotCalledBy(IType firstType, params IType[] moreTypes);
+        TNextElement AreNotCalledBy(Type type, params Type[] moreTypes);
+        TNextElement AreNotCalledBy(IObjectProvider<IType> types);
+        TNextElement AreNotCalledBy(IEnumerable<IType> types);
+        TNextElement AreNotCalledBy(IEnumerable<Type> types);
 
-        TRuleTypeConjunction DoNotHaveDependencyInMethodBodyTo(IType firstType, params IType[] moreTypes);
-        TRuleTypeConjunction DoNotHaveDependencyInMethodBodyTo(Type type, params Type[] moreTypes);
-        TRuleTypeConjunction DoNotHaveDependencyInMethodBodyTo(IObjectProvider<IType> types);
-        TRuleTypeConjunction DoNotHaveDependencyInMethodBodyTo(IEnumerable<IType> types);
-        TRuleTypeConjunction DoNotHaveDependencyInMethodBodyTo(IEnumerable<Type> types);
+        TNextElement DoNotHaveDependencyInMethodBodyTo(IType firstType, params IType[] moreTypes);
+        TNextElement DoNotHaveDependencyInMethodBodyTo(Type type, params Type[] moreTypes);
+        TNextElement DoNotHaveDependencyInMethodBodyTo(IObjectProvider<IType> types);
+        TNextElement DoNotHaveDependencyInMethodBodyTo(IEnumerable<IType> types);
+        TNextElement DoNotHaveDependencyInMethodBodyTo(IEnumerable<Type> types);
 
-        TRuleTypeConjunction DoNotHaveReturnType(IType firstType, params IType[] moreTypes);
-        TRuleTypeConjunction DoNotHaveReturnType(IEnumerable<IType> types);
-        TRuleTypeConjunction DoNotHaveReturnType(IObjectProvider<IType> types);
-        TRuleTypeConjunction DoNotHaveReturnType(Type type, params Type[] moreTypes);
-        TRuleTypeConjunction DoNotHaveReturnType(IEnumerable<Type> types);
+        TNextElement DoNotHaveReturnType(IType firstType, params IType[] moreTypes);
+        TNextElement DoNotHaveReturnType(IEnumerable<IType> types);
+        TNextElement DoNotHaveReturnType(IObjectProvider<IType> types);
+        TNextElement DoNotHaveReturnType(Type type, params Type[] moreTypes);
+        TNextElement DoNotHaveReturnType(IEnumerable<Type> types);
     }
 }

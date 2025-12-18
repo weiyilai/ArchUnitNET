@@ -4,26 +4,26 @@ using ArchUnitNET.Domain;
 
 namespace ArchUnitNET.Fluent.Syntax.Elements.Members
 {
-    public interface IAddMemberPredicate<out TRuleTypeConjunction, TRuleType>
-        : IAddObjectPredicate<TRuleTypeConjunction, TRuleType>
+    public interface IAddMemberPredicate<out TNextElement, TRuleType>
+        : IAddObjectPredicate<TNextElement, TRuleType>
         where TRuleType : ICanBeAnalyzed
     {
-        TRuleTypeConjunction AreDeclaredIn(IType firstType, params IType[] moreTypes);
-        TRuleTypeConjunction AreDeclaredIn(Type firstType, params Type[] moreTypes);
-        TRuleTypeConjunction AreDeclaredIn(IObjectProvider<IType> types);
-        TRuleTypeConjunction AreDeclaredIn(IEnumerable<IType> types);
-        TRuleTypeConjunction AreDeclaredIn(IEnumerable<Type> types);
-        TRuleTypeConjunction AreStatic();
-        TRuleTypeConjunction AreImmutable();
+        TNextElement AreDeclaredIn(IType firstType, params IType[] moreTypes);
+        TNextElement AreDeclaredIn(Type firstType, params Type[] moreTypes);
+        TNextElement AreDeclaredIn(IObjectProvider<IType> types);
+        TNextElement AreDeclaredIn(IEnumerable<IType> types);
+        TNextElement AreDeclaredIn(IEnumerable<Type> types);
+        TNextElement AreStatic();
+        TNextElement AreImmutable();
 
         //Negations
 
-        TRuleTypeConjunction AreNotDeclaredIn(IType firstType, params IType[] moreTypes);
-        TRuleTypeConjunction AreNotDeclaredIn(Type firstType, params Type[] moreTypes);
-        TRuleTypeConjunction AreNotDeclaredIn(IObjectProvider<IType> types);
-        TRuleTypeConjunction AreNotDeclaredIn(IEnumerable<IType> types);
-        TRuleTypeConjunction AreNotDeclaredIn(IEnumerable<Type> types);
-        TRuleTypeConjunction AreNotStatic();
-        TRuleTypeConjunction AreNotImmutable();
+        TNextElement AreNotDeclaredIn(IType firstType, params IType[] moreTypes);
+        TNextElement AreNotDeclaredIn(Type firstType, params Type[] moreTypes);
+        TNextElement AreNotDeclaredIn(IObjectProvider<IType> types);
+        TNextElement AreNotDeclaredIn(IEnumerable<IType> types);
+        TNextElement AreNotDeclaredIn(IEnumerable<Type> types);
+        TNextElement AreNotStatic();
+        TNextElement AreNotImmutable();
     }
 }

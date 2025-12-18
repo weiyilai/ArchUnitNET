@@ -2,18 +2,18 @@
 
 namespace ArchUnitNET.Fluent.Syntax.Elements.Types.Classes
 {
-    public interface IAddClassPredicate<out TReturnType, TRuleType>
-        : IAddTypePredicate<TReturnType, TRuleType>
+    public interface IAddClassPredicate<out TNextElement, TRuleType>
+        : IAddTypePredicate<TNextElement, TRuleType>
         where TRuleType : ICanBeAnalyzed
     {
-        TReturnType AreAbstract();
-        TReturnType AreSealed();
-        TReturnType AreImmutable();
+        TNextElement AreAbstract();
+        TNextElement AreSealed();
+        TNextElement AreImmutable();
 
         //Negations
 
-        TReturnType AreNotAbstract();
-        TReturnType AreNotSealed();
-        TReturnType AreNotImmutable();
+        TNextElement AreNotAbstract();
+        TNextElement AreNotSealed();
+        TNextElement AreNotImmutable();
     }
 }

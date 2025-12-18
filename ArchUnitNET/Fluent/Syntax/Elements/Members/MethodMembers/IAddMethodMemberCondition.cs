@@ -4,52 +4,52 @@ using ArchUnitNET.Domain;
 
 namespace ArchUnitNET.Fluent.Syntax.Elements.Members.MethodMembers
 {
-    public interface IAddMethodMemberCondition<TReturnType, TRuleType>
-        : IAddMemberCondition<TReturnType, TRuleType>
+    public interface IAddMethodMemberCondition<TNextElement, TRuleType>
+        : IAddMemberCondition<TNextElement, TRuleType>
         where TRuleType : ICanBeAnalyzed
     {
-        TReturnType BeConstructor();
-        TReturnType BeVirtual();
+        TNextElement BeConstructor();
+        TNextElement BeVirtual();
 
-        TReturnType BeCalledBy(IType firstType, params IType[] moreTypes);
-        TReturnType BeCalledBy(Type type, params Type[] moreTypes);
-        TReturnType BeCalledBy(IObjectProvider<IType> types);
-        TReturnType BeCalledBy(IEnumerable<IType> types);
-        TReturnType BeCalledBy(IEnumerable<Type> types);
+        TNextElement BeCalledBy(IType firstType, params IType[] moreTypes);
+        TNextElement BeCalledBy(Type type, params Type[] moreTypes);
+        TNextElement BeCalledBy(IObjectProvider<IType> types);
+        TNextElement BeCalledBy(IEnumerable<IType> types);
+        TNextElement BeCalledBy(IEnumerable<Type> types);
 
-        TReturnType HaveDependencyInMethodBodyTo(IType firstType, params IType[] moreTypes);
-        TReturnType HaveDependencyInMethodBodyTo(Type type, params Type[] moreTypes);
-        TReturnType HaveDependencyInMethodBodyTo(IObjectProvider<IType> types);
-        TReturnType HaveDependencyInMethodBodyTo(IEnumerable<IType> types);
-        TReturnType HaveDependencyInMethodBodyTo(IEnumerable<Type> types);
+        TNextElement HaveDependencyInMethodBodyTo(IType firstType, params IType[] moreTypes);
+        TNextElement HaveDependencyInMethodBodyTo(Type type, params Type[] moreTypes);
+        TNextElement HaveDependencyInMethodBodyTo(IObjectProvider<IType> types);
+        TNextElement HaveDependencyInMethodBodyTo(IEnumerable<IType> types);
+        TNextElement HaveDependencyInMethodBodyTo(IEnumerable<Type> types);
 
-        TReturnType HaveReturnType(IType firstType, params IType[] moreTypes);
-        TReturnType HaveReturnType(IEnumerable<IType> types);
-        TReturnType HaveReturnType(IObjectProvider<IType> types);
-        TReturnType HaveReturnType(Type type, params Type[] moreTypes);
-        TReturnType HaveReturnType(IEnumerable<Type> types);
+        TNextElement HaveReturnType(IType firstType, params IType[] moreTypes);
+        TNextElement HaveReturnType(IEnumerable<IType> types);
+        TNextElement HaveReturnType(IObjectProvider<IType> types);
+        TNextElement HaveReturnType(Type type, params Type[] moreTypes);
+        TNextElement HaveReturnType(IEnumerable<Type> types);
 
         //Negations
 
-        TReturnType BeNoConstructor();
-        TReturnType NotBeVirtual();
+        TNextElement BeNoConstructor();
+        TNextElement NotBeVirtual();
 
-        TReturnType NotBeCalledBy(IType firstType, params IType[] moreTypes);
-        TReturnType NotBeCalledBy(Type type, params Type[] moreTypes);
-        TReturnType NotBeCalledBy(IObjectProvider<IType> types);
-        TReturnType NotBeCalledBy(IEnumerable<IType> types);
-        TReturnType NotBeCalledBy(IEnumerable<Type> types);
+        TNextElement NotBeCalledBy(IType firstType, params IType[] moreTypes);
+        TNextElement NotBeCalledBy(Type type, params Type[] moreTypes);
+        TNextElement NotBeCalledBy(IObjectProvider<IType> types);
+        TNextElement NotBeCalledBy(IEnumerable<IType> types);
+        TNextElement NotBeCalledBy(IEnumerable<Type> types);
 
-        TReturnType NotHaveDependencyInMethodBodyTo(IType firstType, params IType[] moreTypes);
-        TReturnType NotHaveDependencyInMethodBodyTo(Type type, params Type[] moreTypes);
-        TReturnType NotHaveDependencyInMethodBodyTo(IObjectProvider<IType> types);
-        TReturnType NotHaveDependencyInMethodBodyTo(IEnumerable<IType> types);
-        TReturnType NotHaveDependencyInMethodBodyTo(IEnumerable<Type> types);
+        TNextElement NotHaveDependencyInMethodBodyTo(IType firstType, params IType[] moreTypes);
+        TNextElement NotHaveDependencyInMethodBodyTo(Type type, params Type[] moreTypes);
+        TNextElement NotHaveDependencyInMethodBodyTo(IObjectProvider<IType> types);
+        TNextElement NotHaveDependencyInMethodBodyTo(IEnumerable<IType> types);
+        TNextElement NotHaveDependencyInMethodBodyTo(IEnumerable<Type> types);
 
-        TReturnType NotHaveReturnType(IType firstType, params IType[] moreTypes);
-        TReturnType NotHaveReturnType(IEnumerable<IType> types);
-        TReturnType NotHaveReturnType(IObjectProvider<IType> types);
-        TReturnType NotHaveReturnType(Type type, params Type[] moreTypes);
-        TReturnType NotHaveReturnType(IEnumerable<Type> types);
+        TNextElement NotHaveReturnType(IType firstType, params IType[] moreTypes);
+        TNextElement NotHaveReturnType(IEnumerable<IType> types);
+        TNextElement NotHaveReturnType(IObjectProvider<IType> types);
+        TNextElement NotHaveReturnType(Type type, params Type[] moreTypes);
+        TNextElement NotHaveReturnType(IEnumerable<Type> types);
     }
 }

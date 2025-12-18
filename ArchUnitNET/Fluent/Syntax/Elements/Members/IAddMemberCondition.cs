@@ -5,29 +5,29 @@ using ArchUnitNET.Fluent.Syntax.Elements.Types;
 
 namespace ArchUnitNET.Fluent.Syntax.Elements.Members
 {
-    public interface IAddMemberCondition<TReturnType, TRuleType>
-        : IAddObjectCondition<TReturnType, TRuleType>
+    public interface IAddMemberCondition<TNextElement, TRuleType>
+        : IAddObjectCondition<TNextElement, TRuleType>
         where TRuleType : ICanBeAnalyzed
     {
-        TReturnType BeDeclaredIn(IType firstType, params IType[] moreTypes);
-        TReturnType BeDeclaredIn(Type firstType, params Type[] moreTypes);
-        TReturnType BeDeclaredIn(IObjectProvider<IType> types);
-        TReturnType BeDeclaredIn(IEnumerable<IType> types);
-        TReturnType BeDeclaredIn(IEnumerable<Type> types);
-        ShouldRelateToTypesThat<TReturnType, TRuleType> BeDeclaredInTypesThat();
+        TNextElement BeDeclaredIn(IType firstType, params IType[] moreTypes);
+        TNextElement BeDeclaredIn(Type firstType, params Type[] moreTypes);
+        TNextElement BeDeclaredIn(IObjectProvider<IType> types);
+        TNextElement BeDeclaredIn(IEnumerable<IType> types);
+        TNextElement BeDeclaredIn(IEnumerable<Type> types);
+        ShouldRelateToTypesThat<TNextElement, TRuleType> BeDeclaredInTypesThat();
 
-        TReturnType BeStatic();
-        TReturnType BeImmutable();
+        TNextElement BeStatic();
+        TNextElement BeImmutable();
 
         //Negations
-        TReturnType NotBeDeclaredIn(IType firstType, params IType[] moreTypes);
-        TReturnType NotBeDeclaredIn(Type firstType, params Type[] moreTypes);
-        TReturnType NotBeDeclaredIn(IObjectProvider<IType> types);
-        TReturnType NotBeDeclaredIn(IEnumerable<IType> types);
-        TReturnType NotBeDeclaredIn(IEnumerable<Type> types);
-        ShouldRelateToTypesThat<TReturnType, TRuleType> NotBeDeclaredInTypesThat();
+        TNextElement NotBeDeclaredIn(IType firstType, params IType[] moreTypes);
+        TNextElement NotBeDeclaredIn(Type firstType, params Type[] moreTypes);
+        TNextElement NotBeDeclaredIn(IObjectProvider<IType> types);
+        TNextElement NotBeDeclaredIn(IEnumerable<IType> types);
+        TNextElement NotBeDeclaredIn(IEnumerable<Type> types);
+        ShouldRelateToTypesThat<TNextElement, TRuleType> NotBeDeclaredInTypesThat();
 
-        TReturnType NotBeStatic();
-        TReturnType NotBeImmutable();
+        TNextElement NotBeStatic();
+        TNextElement NotBeImmutable();
     }
 }
