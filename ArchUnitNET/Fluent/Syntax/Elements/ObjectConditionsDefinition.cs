@@ -2,24 +2,26 @@
 using System.Collections.Generic;
 using System.Linq;
 using ArchUnitNET.Domain;
-using ArchUnitNET.Domain.Exceptions;
 using ArchUnitNET.Domain.Extensions;
 using ArchUnitNET.Fluent.Conditions;
 using JetBrains.Annotations;
+using static ArchUnitNET.Domain.Extensions.EnumerableExtensions;
 using static ArchUnitNET.Domain.Visibility;
 using Attribute = ArchUnitNET.Domain.Attribute;
 
 namespace ArchUnitNET.Fluent.Syntax.Elements
 {
-    public static class ObjectConditionsDefinition<TRuleType>
+    internal static class ObjectConditionsDefinition<TRuleType>
         where TRuleType : ICanBeAnalyzed
     {
-        public static ICondition<TRuleType> Exist()
+        public static IOrderedCondition<TRuleType> Exist()
         {
             return new ExistsCondition<TRuleType>(true);
         }
 
-        public static ICondition<TRuleType> Be(IObjectProvider<ICanBeAnalyzed> objectProvider)
+        public static IOrderedCondition<TRuleType> Be(
+            IObjectProvider<ICanBeAnalyzed> objectProvider
+        )
         {
             var sizedObjectProvider = objectProvider as ISizedObjectProvider<ICanBeAnalyzed>;
             IEnumerable<ConditionResult> Condition(
@@ -27,58 +29,62 @@ namespace ArchUnitNET.Fluent.Syntax.Elements
                 Architecture architecture
             )
             {
-                var objectList = objectProvider.GetObjects(architecture).ToList();
-                var typeList = ruleTypes.ToList();
-                var passedObjects = objectList.OfType<TRuleType>().Intersect(typeList).ToList();
-                foreach (var failedObject in typeList.Except(passedObjects))
+                var isAllowedObject = CreateLookupFn(
+                    objectProvider.GetObjects(architecture).ToList()
+                );
+                foreach (var ruleType in ruleTypes)
                 {
-                    yield return new ConditionResult(
-                        failedObject,
-                        false,
-                        (sizedObjectProvider != null && sizedObjectProvider.Count == 0)
-                            ? "does exist"
-                            : "is not " + objectProvider.Description
-                    );
-                }
-
-                foreach (var passedObject in passedObjects)
-                {
-                    yield return new ConditionResult(passedObject, true);
+                    if (isAllowedObject(ruleType))
+                    {
+                        yield return new ConditionResult(ruleType, true);
+                    }
+                    else
+                    {
+                        yield return new ConditionResult(
+                            ruleType,
+                            false,
+                            (sizedObjectProvider != null && sizedObjectProvider.Count == 0)
+                                ? "does exist"
+                                : "is not " + objectProvider.Description
+                        );
+                    }
                 }
             }
-
             var description = objectProvider.FormatDescription("not exist", "be", "be");
-            return new ArchitectureCondition<TRuleType>(Condition, description);
+            return new OrderedArchitectureCondition<TRuleType>(Condition, description);
         }
 
-        public static ICondition<TRuleType> CallAny(IObjectProvider<MethodMember> objectProvider)
+        public static IOrderedCondition<TRuleType> CallAny(
+            IObjectProvider<MethodMember> objectProvider
+        )
         {
             IEnumerable<ConditionResult> Condition(
                 IEnumerable<TRuleType> ruleTypes,
                 Architecture architecture
             )
             {
-                var methodList = objectProvider.GetObjects(architecture).ToList();
-                var typeList = ruleTypes.ToList();
-                var passedObjects = typeList
-                    .Where(type => type.GetCalledMethods().Intersect(methodList).Any())
-                    .ToList();
-                foreach (var failedObject in typeList.Except(passedObjects))
+                var isRequiredMethod = CreateLookupFn(
+                    objectProvider.GetObjects(architecture).ToList()
+                );
+                foreach (var ruleType in ruleTypes)
                 {
-                    var calledMethods = failedObject.GetCalledMethods().ToList();
-                    var dynamicFailDescription =
-                        calledMethods.Count == 0
-                            ? "does not call any methods"
-                            : "only calls "
-                                + string.Join(
-                                    " and ",
-                                    calledMethods.Select(method => $"\"{method.FullName}\"")
-                                );
-                    yield return new ConditionResult(failedObject, false, dynamicFailDescription);
-                }
-                foreach (var passedObject in passedObjects)
-                {
-                    yield return new ConditionResult(passedObject, true);
+                    if (ruleType.GetCalledMethods().Any(isRequiredMethod))
+                    {
+                        yield return new ConditionResult(ruleType, true);
+                    }
+                    else
+                    {
+                        var calledMethods = ruleType.GetCalledMethods().ToList();
+                        var dynamicFailDescription =
+                            calledMethods.Count == 0
+                                ? "does not call any methods"
+                                : "only calls "
+                                    + string.Join(
+                                        " and ",
+                                        calledMethods.Select(method => $"\"{method.FullName}\"")
+                                    );
+                        yield return new ConditionResult(ruleType, false, dynamicFailDescription);
+                    }
                 }
             }
             var description = objectProvider.FormatDescription(
@@ -86,37 +92,40 @@ namespace ArchUnitNET.Fluent.Syntax.Elements
                 "call",
                 "call any"
             );
-            return new ArchitectureCondition<TRuleType>(Condition, description);
+            return new OrderedArchitectureCondition<TRuleType>(Condition, description);
         }
 
-        public static ICondition<TRuleType> DependOnAny(IObjectProvider<IType> objectProvider)
+        public static IOrderedCondition<TRuleType> DependOnAny(
+            IObjectProvider<IType> objectProvider
+        )
         {
             IEnumerable<ConditionResult> Condition(
                 IEnumerable<TRuleType> ruleTypes,
                 Architecture architecture
             )
             {
-                var typeList = objectProvider.GetObjects(architecture).ToList();
-                var ruleTypeList = ruleTypes.ToList();
-                var passedObjects = ruleTypeList
-                    .Where(type => type.GetTypeDependencies().Intersect(typeList).Any())
-                    .ToList();
-                foreach (var failedObject in ruleTypeList.Except(passedObjects))
+                var isRequiredDependency = CreateLookupFn(
+                    objectProvider.GetObjects(architecture).ToList()
+                );
+                foreach (var ruleType in ruleTypes)
                 {
-                    var dependants = failedObject.GetTypeDependencies(architecture).ToList();
-                    var dynamicFailDescription =
-                        dependants.Count == 0
-                            ? "does not depend on any type"
-                            : "only depends on "
-                                + string.Join(
-                                    " and ",
-                                    dependants.Select(type => $"\"{type.FullName}\"")
-                                );
-                    yield return new ConditionResult(failedObject, false, dynamicFailDescription);
-                }
-                foreach (var passedObject in passedObjects)
-                {
-                    yield return new ConditionResult(passedObject, true);
+                    if (ruleType.GetTypeDependencies().Any(isRequiredDependency))
+                    {
+                        yield return new ConditionResult(ruleType, true);
+                    }
+                    else
+                    {
+                        var dependants = ruleType.GetTypeDependencies(architecture).ToList();
+                        var dynamicFailDescription =
+                            dependants.Count == 0
+                                ? "does not depend on any type"
+                                : "only depends on "
+                                    + string.Join(
+                                        " and ",
+                                        dependants.Select(type => $"\"{type.FullName}\"")
+                                    );
+                        yield return new ConditionResult(ruleType, false, dynamicFailDescription);
+                    }
                 }
             }
             var description = objectProvider.FormatDescription(
@@ -124,10 +133,10 @@ namespace ArchUnitNET.Fluent.Syntax.Elements
                 "depend on",
                 "depend on any"
             );
-            return new ArchitectureCondition<TRuleType>(Condition, description);
+            return new OrderedArchitectureCondition<TRuleType>(Condition, description);
         }
 
-        public static ICondition<TRuleType> FollowCustomCondition(
+        public static IOrderedCondition<TRuleType> FollowCustomCondition(
             Func<TRuleType, ConditionResult> condition,
             string description
         )
@@ -135,7 +144,7 @@ namespace ArchUnitNET.Fluent.Syntax.Elements
             return new SimpleCondition<TRuleType>(condition, description);
         }
 
-        public static ICondition<TRuleType> FollowCustomCondition(
+        public static IOrderedCondition<TRuleType> FollowCustomCondition(
             Func<TRuleType, bool> condition,
             string description,
             string failDescription
@@ -144,48 +153,49 @@ namespace ArchUnitNET.Fluent.Syntax.Elements
             return new SimpleCondition<TRuleType>(condition, description, failDescription);
         }
 
-        public static ICondition<TRuleType> OnlyDependOn(IObjectProvider<IType> objectProvider)
+        public static IOrderedCondition<TRuleType> OnlyDependOn(
+            IObjectProvider<IType> objectProvider
+        )
         {
             IEnumerable<ConditionResult> Condition(
                 IEnumerable<TRuleType> ruleTypes,
                 Architecture architecture
             )
             {
-                var typeList = objectProvider.GetObjects(architecture).ToList();
-                var ruleTypeList = ruleTypes.ToList();
-                var failedObjects = ruleTypeList
-                    .Where(type => type.GetTypeDependencies(architecture).Except(typeList).Any())
-                    .ToList();
-                foreach (var failedObject in failedObjects)
+                var isAllowedDependency = CreateLookupFn(
+                    objectProvider.GetObjects(architecture).ToList()
+                );
+                foreach (var ruleType in ruleTypes)
                 {
-                    var dynamicFailDescription = "does depend on";
-                    var first = true;
-                    foreach (var type in failedObject.GetTypeDependencies().Except(typeList))
+                    if (ruleType.GetTypeDependencies(architecture).All(isAllowedDependency))
                     {
-                        dynamicFailDescription += first
-                            ? " " + type.FullName
-                            : " and " + type.FullName;
-                        first = false;
+                        yield return new ConditionResult(ruleType, true);
                     }
-
-                    yield return new ConditionResult(failedObject, false, dynamicFailDescription);
-                }
-
-                foreach (var passedObject in ruleTypeList.Except(failedObjects))
-                {
-                    yield return new ConditionResult(passedObject, true);
+                    else
+                    {
+                        var dynamicFailDescription =
+                            "does depend on "
+                            + string.Join(
+                                " and ",
+                                ruleType
+                                    .GetTypeDependencies()
+                                    .Where(t => !isAllowedDependency(t))
+                                    .Distinct()
+                                    .Select(t => t.FullName)
+                            );
+                        yield return new ConditionResult(ruleType, false, dynamicFailDescription);
+                    }
                 }
             }
-
             var description = objectProvider.FormatDescription(
                 "have no dependencies",
                 "only depend on",
                 "only depend on"
             );
-            return new ArchitectureCondition<TRuleType>(Condition, description);
+            return new OrderedArchitectureCondition<TRuleType>(Condition, description);
         }
 
-        public static ICondition<TRuleType> HaveAnyAttributes(
+        public static IOrderedCondition<TRuleType> HaveAnyAttributes(
             IObjectProvider<Attribute> objectProvider
         )
         {
@@ -194,40 +204,39 @@ namespace ArchUnitNET.Fluent.Syntax.Elements
                 Architecture architecture
             )
             {
-                var attributeList = objectProvider.GetObjects(architecture).ToList();
-                var ruleTypeList = ruleTypes.ToList();
-                var passedObjects = ruleTypeList
-                    .Where(type => type.Attributes.Intersect(attributeList).Any())
-                    .ToList();
-                foreach (var failedObject in ruleTypeList.Except(passedObjects))
+                var isRequiredAttribute = CreateLookupFn(
+                    objectProvider.GetObjects(architecture).ToList()
+                );
+                foreach (var ruleType in ruleTypes)
                 {
-                    var attributes = failedObject.Attributes.ToList();
-                    var failDescription =
-                        attributes.Count == 0
-                            ? "does not have any attributes"
-                            : "only has attributes "
-                                + string.Join(
-                                    " and ",
-                                    attributes.Select(attribute => $"\"{attribute.FullName}\"")
-                                );
-                    yield return new ConditionResult(failedObject, false, failDescription);
-                }
-
-                foreach (var passedObject in passedObjects)
-                {
-                    yield return new ConditionResult(passedObject, true);
+                    if (ruleType.Attributes.Any(isRequiredAttribute))
+                    {
+                        yield return new ConditionResult(ruleType, true);
+                    }
+                    else
+                    {
+                        var attributes = ruleType.Attributes.ToList();
+                        var dynamicFailDescription =
+                            attributes.Count == 0
+                                ? "does not have any attributes"
+                                : "only has attributes "
+                                    + string.Join(
+                                        " and ",
+                                        attributes.Select(attribute => $"\"{attribute.FullName}\"")
+                                    );
+                        yield return new ConditionResult(ruleType, false, dynamicFailDescription);
+                    }
                 }
             }
-
             var description = objectProvider.FormatDescription(
                 "have any of no attributes (impossible)",
                 "have",
                 "have any"
             );
-            return new ArchitectureCondition<TRuleType>(Condition, description);
+            return new OrderedArchitectureCondition<TRuleType>(Condition, description);
         }
 
-        public static ICondition<TRuleType> OnlyHaveAttributes(
+        public static IOrderedCondition<TRuleType> OnlyHaveAttributes(
             IObjectProvider<Attribute> objectProvider
         )
         {
@@ -236,576 +245,288 @@ namespace ArchUnitNET.Fluent.Syntax.Elements
                 Architecture architecture
             )
             {
-                var attributeList = objectProvider.GetObjects(architecture).ToList();
-                var ruleTypeList = ruleTypes.ToList();
-                var failedObjects = ruleTypeList
-                    .Where(type => type.Attributes.Except(attributeList).Any())
-                    .ToList();
-                foreach (var failedObject in failedObjects)
+                var isAllowedAttribute = CreateLookupFn(
+                    objectProvider.GetObjects(architecture).ToList()
+                );
+                foreach (var ruleType in ruleTypes)
                 {
-                    var dynamicFailDescription = "does have attribute";
-                    var first = true;
-                    foreach (var attribute in failedObject.Attributes.Except(attributeList))
+                    if (ruleType.Attributes.All(isAllowedAttribute))
                     {
-                        dynamicFailDescription += first
-                            ? " " + attribute.FullName
-                            : " and " + attribute.FullName;
-                        first = false;
+                        yield return new ConditionResult(ruleType, true);
                     }
-
-                    yield return new ConditionResult(failedObject, false, dynamicFailDescription);
-                }
-
-                foreach (var passedObject in ruleTypeList.Except(failedObjects))
-                {
-                    yield return new ConditionResult(passedObject, true);
+                    else
+                    {
+                        var dynamicFailDescription =
+                            "does have attribute "
+                            + string.Join(
+                                " and ",
+                                ruleType
+                                    .Attributes.Where(attr => !isAllowedAttribute(attr))
+                                    .Select(a => a.FullName)
+                            );
+                        yield return new ConditionResult(ruleType, false, dynamicFailDescription);
+                    }
                 }
             }
-
             var description = objectProvider.FormatDescription(
                 "have no attributes",
                 "only have",
                 "only have any"
             );
-            return new ArchitectureCondition<TRuleType>(Condition, description);
+            return new OrderedArchitectureCondition<TRuleType>(Condition, description);
         }
 
-        public static ICondition<TRuleType> HaveAnyAttributesWithArguments(
+        public static IOrderedCondition<TRuleType> HaveAnyAttributesWithArguments(
             IEnumerable<object> argumentValues
         )
         {
-            var argumentValueList = argumentValues?.ToList() ?? new List<object> { null };
-            string description;
-            Func<TRuleType, Architecture, string> failDescription;
-            if (argumentValueList.IsNullOrEmpty())
+            var argumentValueList = argumentValues as IList<object> ?? argumentValues.ToList();
+            IEnumerable<ConditionResult> Condition(
+                IEnumerable<TRuleType> ruleTypes,
+                Architecture architecture
+            )
             {
-                description = "have no or any attributes with arguments (always true)";
-                failDescription = (ruleType, architecture) =>
-                    "not have no or any attributes with arguments (impossible)";
-            }
-            else
-            {
-                var firstArgument = argumentValueList.First();
-                description = argumentValueList
-                    .Where(attribute => attribute != firstArgument)
-                    .Aggregate(
-                        "have any attributes with arguments \"" + firstArgument + "\"",
-                        (current, argumentValue) => current + " and \"" + argumentValue + "\""
-                    );
-
-                failDescription = (ruleType, architecture) =>
+                var resolvedArgumentValueList = argumentValueList
+                    .ResolveAttributeArguments(architecture)
+                    .ToList();
+                foreach (var ruleType in ruleTypes)
                 {
-                    var actualArgumentValues = ruleType
-                        .AttributeInstances.SelectMany(instance =>
-                            instance.AttributeArguments.Select(argument => argument.Value)
-                        )
-                        .ToList();
-                    if (!actualArgumentValues.Any())
-                    {
-                        return "does have no attribute with an argument";
-                    }
-
-                    var firstActualArgumentValue = actualArgumentValues.First();
-                    return actualArgumentValues.Aggregate(
-                        "does have attributes with argument values \""
-                            + firstActualArgumentValue
-                            + "\"",
-                        (current, argumentValue) => current + " and \"" + argumentValue + "\""
-                    );
-                };
-            }
-
-            bool Condition(TRuleType obj, Architecture architecture)
-            {
-                var attributeArguments = obj
-                    .AttributeInstances.SelectMany(instance =>
-                        instance.AttributeArguments.Select(arg => arg.Value)
+                    if (
+                        ruleType.AttributeInstances.Any(instance =>
+                        {
+                            var instanceArgumentValues = instance
+                                .GetAllAttributeArgumentValues()
+                                .ToList();
+                            return resolvedArgumentValueList.All(instanceArgumentValues.Contains);
+                        })
                     )
+                    {
+                        yield return new ConditionResult(ruleType, true);
+                    }
+                    else
+                    {
+                        var argumentsDescriptions = ruleType.AttributeInstances.Select(instance =>
+                        {
+                            var argumentsDescription = instance
+                                .GetAllAttributeArgumentValues()
+                                .FormatDescription(
+                                    "without arguments",
+                                    "with argument",
+                                    "with arguments"
+                                );
+                            return $"{instance.Type.FullName} {argumentsDescription}";
+                        });
+                        var failDescription = argumentsDescriptions.FormatDescription(
+                            "does not have any attributes",
+                            "does only have attribute",
+                            "does only have attributes",
+                            elementDescription: str => str
+                        );
+                        yield return new ConditionResult(ruleType, false, failDescription);
+                    }
+                }
+            }
+            var description = argumentValueList.FormatDescription(
+                "have any attributes",
+                "have any attributes with argument",
+                "have any attributes with arguments"
+            );
+            return new OrderedArchitectureCondition<TRuleType>(Condition, description);
+        }
+
+        public static IOrderedCondition<TRuleType> HaveAttributeWithArguments(
+            string attributeFullName,
+            [NotNull] Func<Architecture, Attribute> getAttribute,
+            [NotNull] IEnumerable<object> argumentValues
+        )
+        {
+            var argumentValueList = argumentValues as IList<object> ?? argumentValues.ToList();
+            IEnumerable<ConditionResult> Condition(
+                IEnumerable<TRuleType> ruleTypes,
+                Architecture architecture
+            )
+            {
+                var resolvedAttribute = getAttribute(architecture);
+                var resolvedArgumentValueList = argumentValueList
+                    .ResolveAttributeArguments(architecture)
                     .ToList();
-                var typeAttributeArguments = attributeArguments
-                    .OfType<ITypeInstance<IType>>()
-                    .Select(t => t.Type)
-                    .Union(attributeArguments.OfType<IType>())
-                    .ToList();
-                foreach (var arg in argumentValueList)
+                foreach (var ruleType in ruleTypes)
                 {
-                    if (arg is Type argType)
-                    {
-                        if (typeAttributeArguments.All(t => t.FullName != argType.FullName))
-                        {
-                            return false;
-                        }
-                    }
-                    else if (!attributeArguments.Contains(arg))
-                    {
-                        return false;
-                    }
-                }
-
-                return true;
-            }
-
-            return new ArchitectureCondition<TRuleType>(Condition, failDescription, description);
-        }
-
-        public static ICondition<TRuleType> HaveAttributeWithArguments(
-            [NotNull] Attribute attribute,
-            IEnumerable<object> argumentValues
-        )
-        {
-            string description,
-                failDescription;
-            var argumentValueList = argumentValues?.ToList() ?? new List<object> { null };
-            if (argumentValueList.IsNullOrEmpty())
-            {
-                description = "have attribute \"" + attribute.FullName + "\"";
-                failDescription = "does not have attribute \"" + attribute.FullName + "\"";
-            }
-            else
-            {
-                var firstArgument = argumentValueList.First();
-                description = argumentValueList
-                    .Where(att => att != firstArgument)
-                    .Aggregate(
-                        "have attribute \""
-                            + attribute.FullName
-                            + "\" with arguments \""
-                            + firstArgument
-                            + "\"",
-                        (current, argumentValue) => current + " and \"" + argumentValue + "\""
-                    );
-                failDescription = argumentValueList
-                    .Where(att => att != firstArgument)
-                    .Aggregate(
-                        "does not have attribute \""
-                            + attribute.FullName
-                            + "\" with arguments \""
-                            + firstArgument
-                            + "\"",
-                        (current, argumentValue) => current + " and \"" + argumentValue + "\""
-                    );
-            }
-
-            bool Condition(TRuleType obj, Architecture architecture)
-            {
-                foreach (var attributeInstance in obj.AttributeInstances)
-                {
-                    if (!attributeInstance.Type.Equals(attribute))
-                    {
-                        goto NextAttribute;
-                    }
-
-                    var attributeArguments = attributeInstance
-                        .AttributeArguments.Select(arg => arg.Value)
-                        .ToList();
-                    var typeAttributeArguments = attributeArguments
-                        .OfType<ITypeInstance<IType>>()
-                        .Select(t => t.Type)
-                        .Union(attributeArguments.OfType<IType>())
-                        .ToList();
-                    foreach (var arg in argumentValueList)
-                    {
-                        if (arg is Type argType)
-                        {
-                            if (typeAttributeArguments.All(t => t.FullName != argType.FullName))
-                            {
-                                goto NextAttribute;
-                            }
-                        }
-                        else if (!attributeArguments.Contains(arg))
-                        {
-                            goto NextAttribute;
-                        }
-                    }
-
-                    return true;
-                    NextAttribute:
-                    ;
-                }
-
-                return false;
-            }
-
-            return new ArchitectureCondition<TRuleType>(Condition, description, failDescription);
-        }
-
-        public static ICondition<TRuleType> HaveAttributeWithArguments(
-            [NotNull] Type attribute,
-            IEnumerable<object> argumentValues
-        )
-        {
-            string description,
-                failDescription;
-            var argumentValueList = argumentValues?.ToList() ?? new List<object> { null };
-            if (argumentValueList.IsNullOrEmpty())
-            {
-                description = "have attribute \"" + attribute.FullName + "\"";
-                failDescription = "does not have attribute \"" + attribute.FullName + "\"";
-            }
-            else
-            {
-                var firstArgument = argumentValueList.First();
-                description = argumentValueList
-                    .Where(att => att != firstArgument)
-                    .Aggregate(
-                        "have attribute \""
-                            + attribute.FullName
-                            + "\" with arguments \""
-                            + firstArgument
-                            + "\"",
-                        (current, argumentValue) => current + " and \"" + argumentValue + "\""
-                    );
-                failDescription = argumentValueList
-                    .Where(att => att != firstArgument)
-                    .Aggregate(
-                        "does not have attribute \""
-                            + attribute.FullName
-                            + "\" with arguments \""
-                            + firstArgument
-                            + "\"",
-                        (current, argumentValue) => current + " and \"" + argumentValue + "\""
-                    );
-            }
-
-            bool Condition(TRuleType obj, Architecture architecture)
-            {
-                Attribute archUnitAttribute;
-                try
-                {
-                    archUnitAttribute = architecture.GetAttributeOfType(attribute);
-                }
-                catch (TypeDoesNotExistInArchitecture)
-                {
-                    //can't have a dependency
-                    return false;
-                }
-
-                foreach (var attributeInstance in obj.AttributeInstances)
-                {
-                    if (!attributeInstance.Type.Equals(archUnitAttribute))
-                    {
-                        goto NextAttribute;
-                    }
-
-                    var attributeArguments = attributeInstance
-                        .AttributeArguments.Select(arg => arg.Value)
-                        .ToList();
-                    var typeAttributeArguments = attributeArguments
-                        .OfType<ITypeInstance<IType>>()
-                        .Select(t => t.Type)
-                        .Union(attributeArguments.OfType<IType>())
-                        .ToList();
-                    foreach (var arg in argumentValueList)
-                    {
-                        if (arg is Type argType)
-                        {
-                            if (typeAttributeArguments.All(t => t.FullName != argType.FullName))
-                            {
-                                goto NextAttribute;
-                            }
-                        }
-                        else if (!attributeArguments.Contains(arg))
-                        {
-                            goto NextAttribute;
-                        }
-                    }
-
-                    return true;
-                    NextAttribute:
-                    ;
-                }
-
-                return false;
-            }
-
-            return new ArchitectureCondition<TRuleType>(Condition, description, failDescription);
-        }
-
-        public static ICondition<TRuleType> HaveAnyAttributesWithNamedArguments(
-            IEnumerable<(string, object)> attributeArguments
-        )
-        {
-            var argumentList = attributeArguments.ToList();
-            string description;
-            Func<TRuleType, Architecture, string> failDescription;
-            if (argumentList.IsNullOrEmpty())
-            {
-                description = "have no or any attributes with named arguments (always true)";
-                failDescription = (ruleType, architecture) =>
-                    "not have no or any attributes with named arguments (impossible)";
-            }
-            else
-            {
-                var firstArgument = argumentList.First();
-                description = argumentList
-                    .Where(attribute => attribute != firstArgument)
-                    .Aggregate(
-                        "have any attributes with named arguments \""
-                            + firstArgument.Item1
-                            + "="
-                            + firstArgument.Item2
-                            + "\"",
-                        (current, arg) => current + " and \"" + arg.Item1 + "=" + arg.Item2 + "\""
-                    );
-
-                failDescription = (ruleType, architecture) =>
-                {
-                    var actualNamedArguments = ruleType
-                        .AttributeInstances.SelectMany(instance =>
-                            instance.AttributeArguments.OfType<AttributeNamedArgument>()
+                    var matchingAttributeInstances = ruleType
+                        .AttributeInstances.Where(instance =>
+                            instance.Type.Equals(resolvedAttribute)
                         )
                         .ToList();
-                    if (!actualNamedArguments.Any())
-                    {
-                        return "does have no attribute with a named argument";
-                    }
-
-                    var firstActualNamedArgument = actualNamedArguments.First();
-                    return actualNamedArguments.Aggregate(
-                        "does have attributes with named arguments \""
-                            + firstActualNamedArgument.Name
-                            + "="
-                            + firstActualNamedArgument.Value
-                            + "\"",
-                        (current, arg) => current + " and \"" + arg.Name + "=" + arg.Value + "\""
-                    );
-                };
-            }
-
-            bool Condition(TRuleType obj, Architecture architecture)
-            {
-                var attArguments = obj
-                    .AttributeInstances.SelectMany(instance =>
-                        instance
-                            .AttributeArguments.OfType<AttributeNamedArgument>()
-                            .Select(arg => (arg.Name, arg.Value))
+                    if (
+                        matchingAttributeInstances.Any(instance =>
+                        {
+                            var instanceArgumentValues = instance
+                                .GetAllAttributeArgumentValues()
+                                .ToList();
+                            return resolvedArgumentValueList.All(instanceArgumentValues.Contains);
+                        })
                     )
-                    .ToList();
-                var typeAttributeArguments = attArguments
-                    .Where(arg => arg.Value is ITypeInstance<IType> || arg.Value is IType)
-                    .ToList();
-                foreach (var arg in argumentList)
-                {
-                    if (arg.Item2 is Type argType)
                     {
-                        if (
-                            typeAttributeArguments.All(t =>
-                                t.Name != arg.Item1
-                                || t.Value is ITypeInstance<IType> typeInstance
-                                    && typeInstance.Type.FullName != argType.FullName
-                                || t.Value is IType type && type.FullName != argType.FullName
-                            )
+                        yield return new ConditionResult(ruleType, true);
+                    }
+                    else
+                    {
+                        var argumentsDescriptions = matchingAttributeInstances.Select(instance =>
+                            instance
+                                .GetAllAttributeArgumentValues()
+                                .FormatDescription(
+                                    "without arguments",
+                                    "with argument",
+                                    "with arguments"
+                                )
+                        );
+                        var failDescription = argumentsDescriptions.FormatDescription(
+                            $"does not have attribute \"{resolvedAttribute.FullName}\"",
+                            $"does only have attribute \"{resolvedAttribute.FullName}\"",
+                            $"does only have attribute \"{resolvedAttribute.FullName}\"",
+                            elementDescription: str => str
+                        );
+                        yield return new ConditionResult(ruleType, false, failDescription);
+                    }
+                }
+            }
+            var description = argumentValueList.FormatDescription(
+                $"have attribute \"{attributeFullName}\"",
+                $"have attribute \"{attributeFullName}\" with argument",
+                $"have attribute \"{attributeFullName}\" with arguments"
+            );
+            return new OrderedArchitectureCondition<TRuleType>(Condition, description);
+        }
+
+        public static IOrderedCondition<TRuleType> HaveAnyAttributesWithNamedArguments(
+            IEnumerable<(string, object)> namedArguments
+        )
+        {
+            var namedArgumentList =
+                namedArguments as IList<(string, object)> ?? namedArguments.ToList();
+            IEnumerable<ConditionResult> Condition(
+                IEnumerable<TRuleType> ruleTypes,
+                Architecture architecture
+            )
+            {
+                var resolvedNamedArgumentList = namedArgumentList
+                    .ResolveNamedAttributeArgumentTuples(architecture)
+                    .ToList();
+                foreach (var ruleType in ruleTypes)
+                {
+                    if (
+                        ruleType.AttributeInstances.Any(instance =>
+                        {
+                            var attArguments = instance
+                                .GetAllNamedAttributeArgumentTuples()
+                                .ToList();
+                            return resolvedNamedArgumentList.All(attArguments.Contains);
+                        })
+                    )
+                    {
+                        yield return new ConditionResult(ruleType, true);
+                    }
+                    else
+                    {
+                        var argumentsDescriptions = ruleType.AttributeInstances.Select(instance =>
+                        {
+                            var argumentsDescription = ruleType
+                                .GetAllNamedAttributeArgumentTuples(instance.Type)
+                                .FormatDescription(
+                                    "without named arguments",
+                                    "with named argument",
+                                    "with named arguments",
+                                    elementDescription: arg => $"\"{arg.Item1}={arg.Item2}\""
+                                );
+                            return $"{instance.Type.FullName} {argumentsDescription}";
+                        });
+                        var failDescription = argumentsDescriptions.FormatDescription(
+                            "does not have any attribute",
+                            "does only have attribute",
+                            "does only have attributes",
+                            elementDescription: str => str
+                        );
+                        yield return new ConditionResult(ruleType, false, failDescription);
+                    }
+                }
+            }
+            var description = namedArgumentList.FormatDescription(
+                "have any attributes",
+                "have any attributes with named argument",
+                "have any attributes with named arguments",
+                elementDescription: arg => $"\"{arg.Item1}={arg.Item2}\""
+            );
+            return new OrderedArchitectureCondition<TRuleType>(Condition, description);
+        }
+
+        public static IOrderedCondition<TRuleType> HaveAttributeWithNamedArguments(
+            string attributeFullName,
+            [NotNull] Func<Architecture, Attribute> getAttribute,
+            IEnumerable<(string, object)> namedArguments
+        )
+        {
+            var namedArgumentList =
+                namedArguments as IList<(string, object)> ?? namedArguments.ToList();
+            IEnumerable<ConditionResult> Condition(
+                IEnumerable<TRuleType> ruleTypes,
+                Architecture architecture
+            )
+            {
+                var resolvedAttribute = getAttribute(architecture);
+                var resolvedNamedArgumentList = namedArgumentList
+                    .ResolveNamedAttributeArgumentTuples(architecture)
+                    .ToList();
+                foreach (var ruleType in ruleTypes)
+                {
+                    var matchingAttributeInstances = ruleType
+                        .AttributeInstances.Where(instance =>
+                            instance.Type.Equals(resolvedAttribute)
                         )
-                        {
-                            return false;
-                        }
-                    }
-                    else if (!attArguments.Contains(arg))
-                    {
-                        return false;
-                    }
-                }
-
-                return true;
-            }
-
-            return new ArchitectureCondition<TRuleType>(Condition, failDescription, description);
-        }
-
-        public static ICondition<TRuleType> HaveAttributeWithNamedArguments(
-            [NotNull] Attribute attribute,
-            IEnumerable<(string, object)> attributeArguments
-        )
-        {
-            string description,
-                failDescription;
-            var argumentList = attributeArguments.ToList();
-            if (argumentList.IsNullOrEmpty())
-            {
-                description = "have attribute \"" + attribute.FullName + "\"";
-                failDescription = "does not have attribute \"" + attribute.FullName + "\"";
-            }
-            else
-            {
-                var firstArgument = argumentList.First();
-                description = argumentList
-                    .Where(att => att != firstArgument)
-                    .Aggregate(
-                        "have attribute \""
-                            + attribute.FullName
-                            + "\" with named arguments \""
-                            + firstArgument.Item1
-                            + "="
-                            + firstArgument.Item2
-                            + "\"",
-                        (current, arg) => current + " and \"" + arg.Item1 + "=" + arg.Item2 + "\""
-                    );
-                failDescription = argumentList
-                    .Where(att => att != firstArgument)
-                    .Aggregate(
-                        "does not have attribute \""
-                            + attribute.FullName
-                            + "\" with named arguments \""
-                            + firstArgument.Item1
-                            + "="
-                            + firstArgument.Item2
-                            + "\"",
-                        (current, arg) => current + " and \"" + arg.Item1 + "=" + arg.Item2 + "\""
-                    );
-            }
-
-            bool Condition(TRuleType obj, Architecture architecture)
-            {
-                foreach (var attributeInstance in obj.AttributeInstances)
-                {
-                    if (!attributeInstance.Type.Equals(attribute))
-                    {
-                        goto NextAttribute;
-                    }
-
-                    var attributeArgs = attributeInstance
-                        .AttributeArguments.OfType<AttributeNamedArgument>()
-                        .Select(arg => (arg.Name, arg.Value))
                         .ToList();
-                    var typeAttributeArguments = attributeArgs
-                        .Where(arg => arg.Value is ITypeInstance<IType> || arg.Value is IType)
-                        .ToList();
-                    foreach (var arg in argumentList)
-                    {
-                        if (arg.Item2 is Type argType)
+                    if (
+                        matchingAttributeInstances.Any(instance =>
                         {
-                            if (
-                                typeAttributeArguments.All(t =>
-                                    t.Name != arg.Item1
-                                    || t.Value is ITypeInstance<IType> typeInstance
-                                        && typeInstance.Type.FullName != argType.FullName
-                                    || t.Value is IType type && type.FullName != argType.FullName
+                            var attArguments = instance
+                                .GetAllNamedAttributeArgumentTuples()
+                                .ToList();
+                            return resolvedNamedArgumentList.All(attArguments.Contains);
+                        })
+                    )
+                    {
+                        yield return new ConditionResult(ruleType, true);
+                    }
+                    else
+                    {
+                        var argumentsDescriptions = matchingAttributeInstances.Select(instance =>
+                            ruleType
+                                .GetAllNamedAttributeArgumentTuples(instance.Type)
+                                .FormatDescription(
+                                    "without named arguments",
+                                    "with named argument",
+                                    "with named arguments",
+                                    elementDescription: arg => $"\"{arg.Item1}={arg.Item2}\""
                                 )
-                            )
-                            {
-                                goto NextAttribute;
-                            }
-                        }
-                        else if (!attributeArgs.Contains(arg))
-                        {
-                            goto NextAttribute;
-                        }
+                        );
+                        var failDescription = argumentsDescriptions.FormatDescription(
+                            $"does not have attribute \"{resolvedAttribute.FullName}\"",
+                            $"does only have attribute \"{resolvedAttribute.FullName}\"",
+                            $"does only have attribute \"{resolvedAttribute.FullName}\"",
+                            elementDescription: str => str
+                        );
+                        yield return new ConditionResult(ruleType, false, failDescription);
                     }
-
-                    return true;
-                    NextAttribute:
-                    ;
                 }
-
-                return false;
             }
-
-            return new ArchitectureCondition<TRuleType>(Condition, description, failDescription);
+            var description = namedArgumentList.FormatDescription(
+                $"have attribute \"{attributeFullName}\"",
+                $"have attribute \"{attributeFullName}\" with named argument",
+                $"have attribute \"{attributeFullName}\" with named arguments",
+                elementDescription: arg => $"\"{arg.Item1}={arg.Item2}\""
+            );
+            return new OrderedArchitectureCondition<TRuleType>(Condition, description);
         }
 
-        public static ICondition<TRuleType> HaveAttributeWithNamedArguments(
-            [NotNull] Type attribute,
-            IEnumerable<(string, object)> attributeArguments
-        )
-        {
-            string description,
-                failDescription;
-            var argumentList = attributeArguments.ToList();
-            if (argumentList.IsNullOrEmpty())
-            {
-                description = "have attribute \"" + attribute.FullName + "\"";
-                failDescription = "does not have attribute \"" + attribute.FullName + "\"";
-            }
-            else
-            {
-                var firstArgument = argumentList.First();
-                description = argumentList
-                    .Where(att => att != firstArgument)
-                    .Aggregate(
-                        "have attribute \""
-                            + attribute.FullName
-                            + "\" with named arguments \""
-                            + firstArgument.Item1
-                            + "="
-                            + firstArgument.Item2
-                            + "\"",
-                        (current, arg) => current + " and \"" + arg.Item1 + "=" + arg.Item2 + "\""
-                    );
-                failDescription = argumentList
-                    .Where(att => att != firstArgument)
-                    .Aggregate(
-                        "does not have attribute \""
-                            + attribute.FullName
-                            + "\" with named arguments \""
-                            + firstArgument.Item1
-                            + "="
-                            + firstArgument.Item2
-                            + "\"",
-                        (current, arg) => current + " and \"" + arg.Item1 + "=" + arg.Item2 + "\""
-                    );
-            }
-
-            bool Condition(TRuleType obj, Architecture architecture)
-            {
-                Attribute archUnitAttribute;
-                try
-                {
-                    archUnitAttribute = architecture.GetAttributeOfType(attribute);
-                }
-                catch (TypeDoesNotExistInArchitecture)
-                {
-                    //can't have a dependency
-                    return false;
-                }
-
-                foreach (var attributeInstance in obj.AttributeInstances)
-                {
-                    if (!attributeInstance.Type.Equals(archUnitAttribute))
-                    {
-                        goto NextAttribute;
-                    }
-
-                    var attributeArgs = attributeInstance
-                        .AttributeArguments.OfType<AttributeNamedArgument>()
-                        .Select(arg => (arg.Name, arg.Value))
-                        .ToList();
-                    var typeAttributeArguments = attributeArgs
-                        .Where(arg => arg.Value is ITypeInstance<IType> || arg.Value is IType)
-                        .ToList();
-                    foreach (var arg in argumentList)
-                    {
-                        if (arg.Item2 is Type argType)
-                        {
-                            if (
-                                typeAttributeArguments.All(t =>
-                                    t.Name != arg.Item1
-                                    || t.Value is ITypeInstance<IType> typeInstance
-                                        && typeInstance.Type.FullName != argType.FullName
-                                    || t.Value is IType type && type.FullName != argType.FullName
-                                )
-                            )
-                            {
-                                goto NextAttribute;
-                            }
-                        }
-                        else if (!attributeArgs.Contains(arg))
-                        {
-                            goto NextAttribute;
-                        }
-                    }
-
-                    return true;
-                    NextAttribute:
-                    ;
-                }
-
-                return false;
-            }
-
-            return new ArchitectureCondition<TRuleType>(Condition, description, failDescription);
-        }
-
-        public static ICondition<TRuleType> HaveName(string name)
+        public static IOrderedCondition<TRuleType> HaveName(string name)
         {
             return new SimpleCondition<TRuleType>(
                 obj => obj.NameEquals(name),
@@ -814,7 +535,7 @@ namespace ArchUnitNET.Fluent.Syntax.Elements
             );
         }
 
-        public static ICondition<TRuleType> HaveNameMatching(string pattern)
+        public static IOrderedCondition<TRuleType> HaveNameMatching(string pattern)
         {
             return new SimpleCondition<TRuleType>(
                 obj => obj.NameMatches(pattern),
@@ -823,7 +544,7 @@ namespace ArchUnitNET.Fluent.Syntax.Elements
             );
         }
 
-        public static ICondition<TRuleType> HaveNameStartingWith(string pattern)
+        public static IOrderedCondition<TRuleType> HaveNameStartingWith(string pattern)
         {
             return new SimpleCondition<TRuleType>(
                 obj => obj.NameStartsWith(pattern),
@@ -832,7 +553,7 @@ namespace ArchUnitNET.Fluent.Syntax.Elements
             );
         }
 
-        public static ICondition<TRuleType> HaveNameEndingWith(string pattern)
+        public static IOrderedCondition<TRuleType> HaveNameEndingWith(string pattern)
         {
             return new SimpleCondition<TRuleType>(
                 obj => obj.NameEndsWith(pattern),
@@ -841,7 +562,7 @@ namespace ArchUnitNET.Fluent.Syntax.Elements
             );
         }
 
-        public static ICondition<TRuleType> HaveNameContaining(string pattern)
+        public static IOrderedCondition<TRuleType> HaveNameContaining(string pattern)
         {
             return new SimpleCondition<TRuleType>(
                 obj => obj.NameContains(pattern),
@@ -850,7 +571,7 @@ namespace ArchUnitNET.Fluent.Syntax.Elements
             );
         }
 
-        public static ICondition<TRuleType> HaveFullName(string name)
+        public static IOrderedCondition<TRuleType> HaveFullName(string name)
         {
             return new SimpleCondition<TRuleType>(
                 obj => obj.FullNameEquals(name),
@@ -859,7 +580,7 @@ namespace ArchUnitNET.Fluent.Syntax.Elements
             );
         }
 
-        public static ICondition<TRuleType> HaveFullNameMatching(string pattern)
+        public static IOrderedCondition<TRuleType> HaveFullNameMatching(string pattern)
         {
             return new SimpleCondition<TRuleType>(
                 obj => obj.FullNameMatches(pattern),
@@ -868,7 +589,7 @@ namespace ArchUnitNET.Fluent.Syntax.Elements
             );
         }
 
-        public static ICondition<TRuleType> HaveFullNameStartingWith(string pattern)
+        public static IOrderedCondition<TRuleType> HaveFullNameStartingWith(string pattern)
         {
             return new SimpleCondition<TRuleType>(
                 obj => obj.FullNameStartsWith(pattern),
@@ -877,7 +598,7 @@ namespace ArchUnitNET.Fluent.Syntax.Elements
             );
         }
 
-        public static ICondition<TRuleType> HaveFullNameEndingWith(string pattern)
+        public static IOrderedCondition<TRuleType> HaveFullNameEndingWith(string pattern)
         {
             return new SimpleCondition<TRuleType>(
                 obj => obj.FullNameEndsWith(pattern),
@@ -886,7 +607,7 @@ namespace ArchUnitNET.Fluent.Syntax.Elements
             );
         }
 
-        public static ICondition<TRuleType> HaveFullNameContaining(string pattern)
+        public static IOrderedCondition<TRuleType> HaveFullNameContaining(string pattern)
         {
             return new SimpleCondition<TRuleType>(
                 obj => obj.FullNameContains(pattern),
@@ -895,7 +616,9 @@ namespace ArchUnitNET.Fluent.Syntax.Elements
             );
         }
 
-        public static ICondition<TRuleType> HaveAssemblyQualifiedName(string assemblyQualifiedName)
+        public static IOrderedCondition<TRuleType> HaveAssemblyQualifiedName(
+            string assemblyQualifiedName
+        )
         {
             return new SimpleCondition<TRuleType>(
                 obj => obj.AssemblyQualifiedNameEquals(assemblyQualifiedName),
@@ -904,7 +627,7 @@ namespace ArchUnitNET.Fluent.Syntax.Elements
             );
         }
 
-        public static ICondition<TRuleType> HaveAssemblyQualifiedNameMatching(string pattern)
+        public static IOrderedCondition<TRuleType> HaveAssemblyQualifiedNameMatching(string pattern)
         {
             return new SimpleCondition<TRuleType>(
                 obj => obj.AssemblyQualifiedNameMatches(pattern),
@@ -913,7 +636,9 @@ namespace ArchUnitNET.Fluent.Syntax.Elements
             );
         }
 
-        public static ICondition<TRuleType> HaveAssemblyQualifiedNameStartingWith(string pattern)
+        public static IOrderedCondition<TRuleType> HaveAssemblyQualifiedNameStartingWith(
+            string pattern
+        )
         {
             return new SimpleCondition<TRuleType>(
                 obj => obj.AssemblyQualifiedNameStartsWith(pattern),
@@ -922,7 +647,9 @@ namespace ArchUnitNET.Fluent.Syntax.Elements
             );
         }
 
-        public static ICondition<TRuleType> HaveAssemblyQualifiedNameEndingWith(string pattern)
+        public static IOrderedCondition<TRuleType> HaveAssemblyQualifiedNameEndingWith(
+            string pattern
+        )
         {
             return new SimpleCondition<TRuleType>(
                 obj => obj.AssemblyQualifiedNameEndsWith(pattern),
@@ -931,7 +658,9 @@ namespace ArchUnitNET.Fluent.Syntax.Elements
             );
         }
 
-        public static ICondition<TRuleType> HaveAssemblyQualifiedNameContaining(string pattern)
+        public static IOrderedCondition<TRuleType> HaveAssemblyQualifiedNameContaining(
+            string pattern
+        )
         {
             return new SimpleCondition<TRuleType>(
                 obj => obj.AssemblyQualifiedNameContains(pattern),
@@ -940,7 +669,7 @@ namespace ArchUnitNET.Fluent.Syntax.Elements
             );
         }
 
-        public static ICondition<TRuleType> BePrivate()
+        public static IOrderedCondition<TRuleType> BePrivate()
         {
             return new SimpleCondition<TRuleType>(
                 obj => obj.Visibility == Private,
@@ -949,7 +678,7 @@ namespace ArchUnitNET.Fluent.Syntax.Elements
             );
         }
 
-        public static ICondition<TRuleType> BePublic()
+        public static IOrderedCondition<TRuleType> BePublic()
         {
             return new SimpleCondition<TRuleType>(
                 obj => obj.Visibility == Public,
@@ -958,7 +687,7 @@ namespace ArchUnitNET.Fluent.Syntax.Elements
             );
         }
 
-        public static ICondition<TRuleType> BeProtected()
+        public static IOrderedCondition<TRuleType> BeProtected()
         {
             return new SimpleCondition<TRuleType>(
                 obj => obj.Visibility == Protected,
@@ -967,7 +696,7 @@ namespace ArchUnitNET.Fluent.Syntax.Elements
             );
         }
 
-        public static ICondition<TRuleType> BeInternal()
+        public static IOrderedCondition<TRuleType> BeInternal()
         {
             return new SimpleCondition<TRuleType>(
                 obj => obj.Visibility == Internal,
@@ -976,7 +705,7 @@ namespace ArchUnitNET.Fluent.Syntax.Elements
             );
         }
 
-        public static ICondition<TRuleType> BeProtectedInternal()
+        public static IOrderedCondition<TRuleType> BeProtectedInternal()
         {
             return new SimpleCondition<TRuleType>(
                 obj => obj.Visibility == ProtectedInternal,
@@ -985,7 +714,7 @@ namespace ArchUnitNET.Fluent.Syntax.Elements
             );
         }
 
-        public static ICondition<TRuleType> BePrivateProtected()
+        public static IOrderedCondition<TRuleType> BePrivateProtected()
         {
             return new SimpleCondition<TRuleType>(
                 obj => obj.Visibility == PrivateProtected,
@@ -1034,116 +763,124 @@ namespace ArchUnitNET.Fluent.Syntax.Elements
 
         //Negations
 
-        public static ICondition<TRuleType> NotExist()
+        public static IOrderedCondition<TRuleType> NotExist()
         {
             return new ExistsCondition<TRuleType>(false);
         }
 
-        public static ICondition<TRuleType> NotBe(IObjectProvider<ICanBeAnalyzed> objectProvider)
+        public static IOrderedCondition<TRuleType> NotBe(
+            IObjectProvider<ICanBeAnalyzed> objectProvider
+        )
         {
             IEnumerable<ConditionResult> Condition(
                 IEnumerable<TRuleType> ruleTypes,
                 Architecture architecture
             )
             {
-                var objectList = objectProvider.GetObjects(architecture).ToList();
-                var typeList = ruleTypes.ToList();
-                var failedObjects = objectList.OfType<TRuleType>().Intersect(typeList).ToList();
-                foreach (var failedObject in failedObjects)
+                var objects = objectProvider.GetObjects(architecture).ToList();
+                var isForbiddenObject = CreateLookupFn(objects);
+                foreach (var ruleType in ruleTypes)
                 {
-                    yield return new ConditionResult(
-                        failedObject,
-                        false,
-                        "is " + objectProvider.Description
-                    );
-                }
-
-                foreach (var passedObject in typeList.Except(failedObjects))
-                {
-                    yield return new ConditionResult(passedObject, true);
+                    if (!isForbiddenObject(ruleType))
+                    {
+                        yield return new ConditionResult(ruleType, true);
+                    }
+                    else
+                    {
+                        yield return new ConditionResult(
+                            ruleType,
+                            false,
+                            objects.Count == 0 ? "does exist" : "is " + objectProvider.Description
+                        );
+                    }
                 }
             }
-
             var description = objectProvider.FormatDescription(
                 "not be any of no objects (always true)",
                 "not be",
                 "not be"
             );
-            return new ArchitectureCondition<TRuleType>(Condition, description);
+            return new OrderedArchitectureCondition<TRuleType>(Condition, description);
         }
 
-        public static ICondition<TRuleType> NotCallAny(IObjectProvider<MethodMember> objectProvider)
+        public static IOrderedCondition<TRuleType> NotCallAny(
+            IObjectProvider<MethodMember> objectProvider
+        )
         {
             IEnumerable<ConditionResult> Condition(
                 IEnumerable<TRuleType> ruleTypes,
                 Architecture architecture
             )
             {
-                var methodList = objectProvider.GetObjects(architecture).ToList();
-                var typeList = ruleTypes.ToList();
-                var failedObjects = typeList
-                    .Where(type => type.GetCalledMethods().Intersect(methodList).Any())
-                    .ToList();
-                foreach (var failedObject in failedObjects)
+                var isForbiddenMethod = CreateLookupFn(
+                    objectProvider.GetObjects(architecture).ToList()
+                );
+                foreach (var ruleType in ruleTypes)
                 {
-                    var calledMethods = failedObject
-                        .GetCalledMethods()
-                        .Intersect(methodList)
-                        .Select(method => $"\"{method.FullName}\"");
-                    var dynamicFailDescription = "does call " + string.Join(" and ", calledMethods);
-                    yield return new ConditionResult(failedObject, false, dynamicFailDescription);
-                }
-                foreach (var passedObject in typeList.Except(failedObjects))
-                {
-                    yield return new ConditionResult(passedObject, true);
+                    if (!ruleType.GetCalledMethods().Any(isForbiddenMethod))
+                    {
+                        yield return new ConditionResult(ruleType, true);
+                    }
+                    else
+                    {
+                        var calledMethods = ruleType
+                            .GetCalledMethods()
+                            .Where(isForbiddenMethod)
+                            .Select(method => $"\"{method.FullName}\"");
+                        var dynamicFailDescription =
+                            "does call " + string.Join(" and ", calledMethods);
+                        yield return new ConditionResult(ruleType, false, dynamicFailDescription);
+                    }
                 }
             }
-
             var description = objectProvider.FormatDescription(
                 "not call any of no methods (always true)",
                 "not call",
                 "not call any"
             );
-            return new ArchitectureCondition<TRuleType>(Condition, description);
+            return new OrderedArchitectureCondition<TRuleType>(Condition, description);
         }
 
-        public static ICondition<TRuleType> NotDependOnAny(IObjectProvider<IType> objectProvider)
+        public static IOrderedCondition<TRuleType> NotDependOnAny(
+            IObjectProvider<IType> objectProvider
+        )
         {
             IEnumerable<ConditionResult> Condition(
                 IEnumerable<TRuleType> ruleTypes,
                 Architecture architecture
             )
             {
-                var typeList = objectProvider.GetObjects(architecture).ToList();
-                var ruleTypeList = ruleTypes.ToList();
-                var failedObjects = ruleTypeList
-                    .Where(type => type.GetTypeDependencies().Intersect(typeList).Any())
-                    .ToList();
-                foreach (var failedObject in failedObjects)
+                var isForbiddenDependency = CreateLookupFn(
+                    objectProvider.GetObjects(architecture).ToList()
+                );
+                foreach (var ruleType in ruleTypes)
                 {
-                    var dependants = failedObject
-                        .GetTypeDependencies()
-                        .Intersect(typeList)
-                        .Select(type => $"\"{type.FullName}\"");
-                    var dynamicFailDescription =
-                        "does depend on " + string.Join(" and ", dependants);
-                    yield return new ConditionResult(failedObject, false, dynamicFailDescription);
-                }
-                foreach (var passedObject in ruleTypeList.Except(failedObjects))
-                {
-                    yield return new ConditionResult(passedObject, true);
+                    if (!ruleType.GetTypeDependencies().Any(isForbiddenDependency))
+                    {
+                        yield return new ConditionResult(ruleType, true);
+                    }
+                    else
+                    {
+                        var dependants = ruleType
+                            .GetTypeDependencies()
+                            .Where(isForbiddenDependency)
+                            .Distinct()
+                            .Select(type => $"\"{type.FullName}\"");
+                        var dynamicFailDescription =
+                            "does depend on " + string.Join(" and ", dependants);
+                        yield return new ConditionResult(ruleType, false, dynamicFailDescription);
+                    }
                 }
             }
-
             var description = objectProvider.FormatDescription(
                 "not depend on any of no types (always true)",
                 "not depend on",
                 "not depend on any"
             );
-            return new ArchitectureCondition<TRuleType>(Condition, description);
+            return new OrderedArchitectureCondition<TRuleType>(Condition, description);
         }
 
-        public static ICondition<TRuleType> NotHaveAnyAttributes(
+        public static IOrderedCondition<TRuleType> NotHaveAnyAttributes(
             IObjectProvider<Attribute> objectProvider
         )
         {
@@ -1152,578 +889,260 @@ namespace ArchUnitNET.Fluent.Syntax.Elements
                 Architecture architecture
             )
             {
-                var attributeList = objectProvider.GetObjects(architecture).ToList();
-                var ruleTypeList = ruleTypes.ToList();
-                var failedObjects = ruleTypeList
-                    .Where(type => type.Attributes.Intersect(attributeList).Any())
-                    .ToList();
-                foreach (var failedObject in failedObjects)
+                var isForbiddenAttribute = CreateLookupFn(
+                    objectProvider.GetObjects(architecture).ToList()
+                );
+                foreach (var ruleType in ruleTypes)
                 {
-                    var dynamicFailDescription = "does have attribute";
-                    var first = true;
-                    foreach (var attribute in failedObject.Attributes.Intersect(attributeList))
+                    if (!ruleType.Attributes.Any(isForbiddenAttribute))
                     {
-                        dynamicFailDescription += first
-                            ? " " + attribute.FullName
-                            : " and " + attribute.FullName;
-                        first = false;
+                        yield return new ConditionResult(ruleType, true);
                     }
-
-                    yield return new ConditionResult(failedObject, false, dynamicFailDescription);
-                }
-
-                foreach (var passedObject in ruleTypeList.Except(failedObjects))
-                {
-                    yield return new ConditionResult(passedObject, true);
+                    else
+                    {
+                        var attributes = ruleType.Attributes.Where(isForbiddenAttribute).ToList();
+                        var dynamicFailDescription =
+                            "does have attribute "
+                            + string.Join(
+                                " and ",
+                                attributes.Select(attribute => attribute.FullName)
+                            );
+                        yield return new ConditionResult(ruleType, false, dynamicFailDescription);
+                    }
                 }
             }
-
             var description = objectProvider.FormatDescription(
                 "not have any of no attributes (always true)",
                 "not have",
                 "not have any"
             );
-            return new ArchitectureCondition<TRuleType>(Condition, description);
+            return new OrderedArchitectureCondition<TRuleType>(Condition, description);
         }
 
-        public static ICondition<TRuleType> NotHaveAnyAttributesWithArguments(
+        public static IOrderedCondition<TRuleType> NotHaveAnyAttributesWithArguments(
             IEnumerable<object> argumentValues
         )
         {
-            var argumentValueList = argumentValues?.ToList() ?? new List<object> { null };
-            string description;
-            Func<TRuleType, Architecture, string> failDescription;
-            if (argumentValueList.IsNullOrEmpty())
-            {
-                description = "not have no or any attributes with arguments (impossible)";
-                failDescription = (ruleType, architecture) =>
-                    "have no or any attributes with arguments (always)";
-            }
-            else
-            {
-                var firstArgument = argumentValueList.First();
-                description = argumentValueList
-                    .Where(attribute => attribute != firstArgument)
-                    .Aggregate(
-                        "not have any attributes with arguments \"" + firstArgument + "\"",
-                        (current, argumentValue) => current + " and \"" + argumentValue + "\""
-                    );
+            var argumentValueList = argumentValues as IList<object> ?? argumentValues.ToList();
 
-                failDescription = (ruleType, architecture) =>
+            IEnumerable<ConditionResult> Condition(
+                IEnumerable<TRuleType> ruleTypes,
+                Architecture architecture
+            )
+            {
+                var resolvedArgumentValueList = argumentValueList
+                    .ResolveAttributeArguments(architecture)
+                    .ToList();
+                foreach (var ruleType in ruleTypes)
                 {
-                    var actualArgumentValues = ruleType
-                        .AttributeInstances.SelectMany(instance =>
-                            instance.AttributeArguments.Select(argument => argument.Value)
-                        )
-                        .ToList();
-                    if (!actualArgumentValues.Any())
+                    var attArguments = ruleType.GetAllAttributeArgumentValues().ToList();
+                    if (!resolvedArgumentValueList.Any(attArguments.Contains))
                     {
-                        return "does have no attribute with an argument";
+                        yield return new ConditionResult(ruleType, true);
                     }
-
-                    var firstActualArgumentValue = actualArgumentValues.First();
-                    return actualArgumentValues.Aggregate(
-                        "does have attributes with argument values \""
-                            + firstActualArgumentValue
-                            + "\"",
-                        (current, argumentValue) => current + " and \"" + argumentValue + "\""
-                    );
-                };
-            }
-
-            bool Condition(TRuleType obj, Architecture architecture)
-            {
-                var attributeArguments = obj
-                    .AttributeInstances.SelectMany(instance =>
-                        instance.AttributeArguments.Select(arg => arg.Value)
-                    )
-                    .ToList();
-                var typeAttributeArguments = attributeArguments
-                    .OfType<ITypeInstance<IType>>()
-                    .Select(t => t.Type)
-                    .Union(attributeArguments.OfType<IType>())
-                    .ToList();
-                foreach (var arg in argumentValueList)
-                {
-                    if (arg is Type argType)
+                    else
                     {
-                        if (typeAttributeArguments.Any(t => t.FullName == argType.FullName))
+                        var failedAttributesAndArguments = ruleType
+                            .AttributeInstances.Select(instance =>
+                            {
+                                var attributeArguments = ruleType
+                                    .GetAllAttributeArgumentValues(instance.Type)
+                                    .ToList();
+                                var failedArguments = resolvedArgumentValueList
+                                    .Where(attributeArguments.Contains)
+                                    .ToList();
+                                return (instance, failedArguments);
+                            })
+                            .Where(t => t.failedArguments.Any())
+                            .ToList();
+                        var argumentDescriptions = failedAttributesAndArguments.Select(t =>
                         {
-                            return false;
-                        }
-                    }
-                    else if (attributeArguments.Contains(arg))
-                    {
-                        return false;
+                            var withArguments =
+                                t.failedArguments.Count == 1 ? "with argument" : "with arguments";
+                            var arguments = t.failedArguments.Select(arg => $"\"{arg}\"");
+                            var argumentsDescription = string.Join(" and ", arguments);
+                            return $"attribute {t.instance.Type.FullName} {withArguments} {argumentsDescription}";
+                        });
+                        var failDescription =
+                            "does have " + string.Join(" and ", argumentDescriptions);
+                        yield return new ConditionResult(ruleType, false, failDescription);
                     }
                 }
-
-                return true;
             }
 
-            return new ArchitectureCondition<TRuleType>(Condition, failDescription, description);
+            var description = argumentValueList.FormatDescription(
+                "not have any attributes with any of no arguments (always true)",
+                "not have any attributes with argument",
+                "not have any attributes with arguments"
+            );
+            return new OrderedArchitectureCondition<TRuleType>(Condition, description);
         }
 
-        public static ICondition<TRuleType> NotHaveAttributeWithArguments(
-            [NotNull] Attribute attribute,
+        public static IOrderedCondition<TRuleType> NotHaveAttributeWithArguments(
+            string attributeFullName,
+            [NotNull] Func<Architecture, Attribute> getAttribute,
             IEnumerable<object> argumentValues
         )
         {
-            string description,
-                failDescription;
-            var argumentValueList = argumentValues?.ToList() ?? new List<object> { null };
-            if (argumentValueList.IsNullOrEmpty())
+            var argumentValueList = argumentValues as IList<object> ?? argumentValues.ToList();
+
+            IEnumerable<ConditionResult> Condition(
+                IEnumerable<TRuleType> ruleTypes,
+                Architecture architecture
+            )
             {
-                description = "not have attribute \"" + attribute.FullName + "\"";
-                failDescription = "does have attribute \"" + attribute.FullName + "\"";
-            }
-            else
-            {
-                var firstArgument = argumentValueList.First();
-                description = argumentValueList
-                    .Where(att => att != firstArgument)
-                    .Aggregate(
-                        "not have attribute \""
-                            + attribute.FullName
-                            + "\" with arguments \""
-                            + firstArgument
-                            + "\"",
-                        (current, argumentValue) => current + " and \"" + argumentValue + "\""
-                    );
-                failDescription = argumentValueList
-                    .Where(att => att != firstArgument)
-                    .Aggregate(
-                        "does have attribute \""
-                            + attribute.FullName
-                            + "\" with arguments \""
-                            + firstArgument
-                            + "\"",
-                        (current, argumentValue) => current + " and \"" + argumentValue + "\""
-                    );
-            }
-
-            bool Condition(TRuleType obj, Architecture architecture)
-            {
-                foreach (var attributeInstance in obj.AttributeInstances)
-                {
-                    if (!attributeInstance.Type.Equals(attribute))
-                    {
-                        goto NextAttribute;
-                    }
-
-                    var attributeArguments = attributeInstance
-                        .AttributeArguments.Select(arg => arg.Value)
-                        .ToList();
-                    var typeAttributeArguments = attributeArguments
-                        .OfType<ITypeInstance<IType>>()
-                        .Select(t => t.Type)
-                        .Union(attributeArguments.OfType<IType>())
-                        .ToList();
-                    foreach (var arg in argumentValueList)
-                    {
-                        if (arg is Type argType)
-                        {
-                            if (typeAttributeArguments.All(t => t.FullName != argType.FullName))
-                            {
-                                goto NextAttribute;
-                            }
-                        }
-                        else if (!attributeArguments.Contains(arg))
-                        {
-                            goto NextAttribute;
-                        }
-                    }
-
-                    return false;
-                    NextAttribute:
-                    ;
-                }
-
-                return true;
-            }
-
-            return new ArchitectureCondition<TRuleType>(Condition, failDescription, description);
-        }
-
-        public static ICondition<TRuleType> NotHaveAttributeWithArguments(
-            [NotNull] Type attribute,
-            IEnumerable<object> argumentValues
-        )
-        {
-            string description,
-                failDescription;
-            var argumentValueList = argumentValues?.ToList() ?? new List<object> { null };
-            if (argumentValueList.IsNullOrEmpty())
-            {
-                description = "not have attribute \"" + attribute.FullName + "\"";
-                failDescription = "does have attribute \"" + attribute.FullName + "\"";
-            }
-            else
-            {
-                var firstArgument = argumentValueList.First();
-                description = argumentValueList
-                    .Where(att => att != firstArgument)
-                    .Aggregate(
-                        "not have attribute \""
-                            + attribute.FullName
-                            + "\" with arguments \""
-                            + firstArgument
-                            + "\"",
-                        (current, argumentValue) => current + " and \"" + argumentValue + "\""
-                    );
-                failDescription = argumentValueList
-                    .Where(att => att != firstArgument)
-                    .Aggregate(
-                        "does have attribute \""
-                            + attribute.FullName
-                            + "\" with arguments \""
-                            + firstArgument
-                            + "\"",
-                        (current, argumentValue) => current + " and \"" + argumentValue + "\""
-                    );
-            }
-
-            bool Condition(TRuleType obj, Architecture architecture)
-            {
-                Attribute archUnitAttribute;
-                try
-                {
-                    archUnitAttribute = architecture.GetAttributeOfType(attribute);
-                }
-                catch (TypeDoesNotExistInArchitecture)
-                {
-                    //can't have a dependency
-                    return true;
-                }
-
-                foreach (var attributeInstance in obj.AttributeInstances)
-                {
-                    if (!attributeInstance.Type.Equals(archUnitAttribute))
-                    {
-                        goto NextAttribute;
-                    }
-
-                    var attributeArguments = attributeInstance
-                        .AttributeArguments.Select(arg => arg.Value)
-                        .ToList();
-                    var typeAttributeArguments = attributeArguments
-                        .OfType<ITypeInstance<IType>>()
-                        .Select(t => t.Type)
-                        .Union(attributeArguments.OfType<IType>())
-                        .ToList();
-                    foreach (var arg in argumentValueList)
-                    {
-                        if (arg is Type argType)
-                        {
-                            if (typeAttributeArguments.All(t => t.FullName != argType.FullName))
-                            {
-                                goto NextAttribute;
-                            }
-                        }
-                        else if (!attributeArguments.Contains(arg))
-                        {
-                            goto NextAttribute;
-                        }
-                    }
-
-                    return false;
-                    NextAttribute:
-                    ;
-                }
-
-                return true;
-            }
-
-            return new ArchitectureCondition<TRuleType>(Condition, failDescription, description);
-        }
-
-        public static ICondition<TRuleType> NotHaveAnyAttributesWithNamedArguments(
-            IEnumerable<(string, object)> attributeArguments
-        )
-        {
-            var argumentList = attributeArguments.ToList();
-            string description;
-            Func<TRuleType, Architecture, string> failDescription;
-            if (argumentList.IsNullOrEmpty())
-            {
-                description = "not have no or any attributes with named arguments (impossible)";
-                failDescription = (ruleType, architecture) =>
-                    "have no or any attributes with named arguments (always true)";
-            }
-            else
-            {
-                var firstArgument = argumentList.First();
-                description = argumentList
-                    .Where(attribute => attribute != firstArgument)
-                    .Aggregate(
-                        "not have any attributes with named arguments \""
-                            + firstArgument.Item1
-                            + "="
-                            + firstArgument.Item2
-                            + "\"",
-                        (current, arg) => current + " and \"" + arg.Item1 + "=" + arg.Item2 + "\""
-                    );
-
-                failDescription = (ruleType, architecture) =>
-                {
-                    var actualNamedArguments = ruleType
-                        .AttributeInstances.SelectMany(instance =>
-                            instance.AttributeArguments.OfType<AttributeNamedArgument>()
-                        )
-                        .ToList();
-                    if (!actualNamedArguments.Any())
-                    {
-                        return "does have no attribute with a named argument";
-                    }
-
-                    var firstActualNamedArgument = actualNamedArguments.First();
-                    return actualNamedArguments.Aggregate(
-                        "does have attributes with named arguments \""
-                            + firstActualNamedArgument.Name
-                            + "="
-                            + firstActualNamedArgument.Value
-                            + "\"",
-                        (current, arg) => current + " and \"" + arg.Name + "=" + arg.Value + "\""
-                    );
-                };
-            }
-
-            bool Condition(TRuleType obj, Architecture architecture)
-            {
-                var attArguments = obj
-                    .AttributeInstances.SelectMany(instance =>
-                        instance
-                            .AttributeArguments.OfType<AttributeNamedArgument>()
-                            .Select(arg => (arg.Name, arg.Value))
-                    )
+                var resolvedAttribute = getAttribute(architecture);
+                var resolvedArgumentValueList = argumentValueList
+                    .ResolveAttributeArguments(architecture)
                     .ToList();
-                var typeAttributeArguments = attArguments
-                    .Where(arg => arg.Value is ITypeInstance<IType> || arg.Value is IType)
+                foreach (var ruleType in ruleTypes)
+                {
+                    var failedArguments = ruleType
+                        .GetAllAttributeArgumentValues(resolvedAttribute)
+                        .Where(resolvedArgumentValueList.Contains)
+                        .ToList();
+                    if (!failedArguments.Any())
+                    {
+                        yield return new ConditionResult(ruleType, true);
+                    }
+                    else
+                    {
+                        var withArguments =
+                            failedArguments.Count == 1 ? "with argument" : "with arguments";
+                        var arguments = failedArguments.Select(arg => $"\"{arg}\"");
+                        var argumentsDescription = string.Join(" and ", arguments);
+                        var failDescription =
+                            $"does have attribute \"{resolvedAttribute.FullName}\" {withArguments} {argumentsDescription}";
+                        yield return new ConditionResult(ruleType, false, failDescription);
+                    }
+                }
+            }
+
+            var description = argumentValueList.FormatDescription(
+                $"not have attribute \"{attributeFullName}\" with any of no arguments (always true)",
+                $"not have attribute \"{attributeFullName}\" with argument",
+                $"not have attribute \"{attributeFullName}\" with arguments"
+            );
+            return new OrderedArchitectureCondition<TRuleType>(Condition, description);
+        }
+
+        public static IOrderedCondition<TRuleType> NotHaveAnyAttributesWithNamedArguments(
+            IEnumerable<(string, object)> namedArguments
+        )
+        {
+            var namedArgumentList =
+                namedArguments as IList<(string, object)> ?? namedArguments.ToList();
+            IEnumerable<ConditionResult> Condition(
+                IEnumerable<TRuleType> ruleTypes,
+                Architecture architecture
+            )
+            {
+                var resolvedNamedArgumentList = namedArgumentList
+                    .ResolveNamedAttributeArgumentTuples(architecture)
                     .ToList();
-                foreach (var arg in argumentList)
+                foreach (var ruleType in ruleTypes)
                 {
-                    if (arg.Item2 is Type argType)
+                    var attArguments = ruleType.GetAllNamedAttributeArgumentTuples().ToList();
+                    if (!resolvedNamedArgumentList.Any(attArguments.Contains))
                     {
-                        if (
-                            typeAttributeArguments.Any(t =>
-                                t.Name == arg.Item1
-                                && (
-                                    t.Value is ITypeInstance<IType> typeInstance
-                                        && typeInstance.Type.FullName == argType.FullName
-                                    || t.Value is IType type && type.FullName == argType.FullName
-                                )
-                            )
-                        )
-                        {
-                            return false;
-                        }
+                        yield return new ConditionResult(ruleType, true);
                     }
-                    else if (attArguments.Contains(arg))
+                    else
                     {
-                        return false;
+                        var failedAttributesAndArguments = ruleType
+                            .AttributeInstances.Select(instance =>
+                            {
+                                var attributeArguments =
+                                    ruleType.GetAllNamedAttributeArgumentTuples(instance.Type);
+                                var failedArguments = resolvedNamedArgumentList
+                                    .Where(attributeArguments.Contains)
+                                    .ToList();
+                                return (instance, failedArguments);
+                            })
+                            .Where(t => t.failedArguments.Any())
+                            .ToList();
+                        var argumentDescriptions = failedAttributesAndArguments.Select(t =>
+                        {
+                            var withArguments =
+                                t.failedArguments.Count == 1
+                                    ? "with named argument"
+                                    : "with named arguments";
+                            var arguments = t.failedArguments.Select(arg =>
+                                $"\"{arg.Item1}={arg.Item2}\""
+                            );
+                            var argumentsDescription = string.Join(" and ", arguments);
+                            return $"attribute {t.instance.Type.FullName} {withArguments} {argumentsDescription}";
+                        });
+                        var failDescription =
+                            "does have " + string.Join(" and ", argumentDescriptions);
+                        yield return new ConditionResult(ruleType, false, failDescription);
                     }
                 }
-
-                return true;
             }
-
-            return new ArchitectureCondition<TRuleType>(Condition, failDescription, description);
+            var description = namedArgumentList.FormatDescription(
+                "not have any attributes with any of no named arguments (always true)",
+                "not have any attributes with named argument",
+                "not have any attributes with named arguments",
+                elementDescription: arg => $"\"{arg.Item1}={arg.Item2}\""
+            );
+            return new OrderedArchitectureCondition<TRuleType>(Condition, description);
         }
 
-        public static ICondition<TRuleType> NotHaveAttributeWithNamedArguments(
-            [NotNull] Attribute attribute,
-            IEnumerable<(string, object)> attributeArguments
+        public static IOrderedCondition<TRuleType> NotHaveAttributeWithNamedArguments(
+            string attributeFullName,
+            [NotNull] Func<Architecture, Attribute> getAttribute,
+            IEnumerable<(string, object)> namedArguments
         )
         {
-            string description,
-                failDescription;
-            var argumentList = attributeArguments.ToList();
-            if (argumentList.IsNullOrEmpty())
-            {
-                description = "not have attribute \"" + attribute.FullName + "\"";
-                failDescription = "does have attribute \"" + attribute.FullName + "\"";
-            }
-            else
-            {
-                var firstArgument = argumentList.First();
-                description = argumentList
-                    .Where(att => att != firstArgument)
-                    .Aggregate(
-                        "not have attribute \""
-                            + attribute.FullName
-                            + "\" with named arguments \""
-                            + firstArgument.Item1
-                            + "="
-                            + firstArgument.Item2
-                            + "\"",
-                        (current, arg) => current + " and \"" + arg.Item1 + "=" + arg.Item2 + "\""
-                    );
-                failDescription = argumentList
-                    .Where(att => att != firstArgument)
-                    .Aggregate(
-                        "does have attribute \""
-                            + attribute.FullName
-                            + "\" with named arguments \""
-                            + firstArgument.Item1
-                            + "="
-                            + firstArgument.Item2
-                            + "\"",
-                        (current, arg) => current + " and \"" + arg.Item1 + "=" + arg.Item2 + "\""
-                    );
-            }
+            var namedArgumentList =
+                namedArguments as IList<(string, object)> ?? namedArguments.ToList();
 
-            bool Condition(TRuleType obj, Architecture architecture)
+            IEnumerable<ConditionResult> Condition(
+                IEnumerable<TRuleType> ruleTypes,
+                Architecture architecture
+            )
             {
-                foreach (var attributeInstance in obj.AttributeInstances)
+                var resolvedAttribute = getAttribute(architecture);
+                var resolvedArgumentList = namedArgumentList
+                    .ResolveNamedAttributeArgumentTuples(architecture)
+                    .ToList();
+                foreach (var ruleType in ruleTypes)
                 {
-                    if (!attributeInstance.Type.Equals(attribute))
-                    {
-                        goto NextAttribute;
-                    }
-
-                    var attributeArgs = attributeInstance
-                        .AttributeArguments.OfType<AttributeNamedArgument>()
-                        .Select(arg => (arg.Name, arg.Value))
+                    var failedArguments = ruleType
+                        .GetAllNamedAttributeArgumentTuples(resolvedAttribute)
+                        .Where(resolvedArgumentList.Contains)
                         .ToList();
-                    var typeAttributeArguments = attributeArgs
-                        .Where(arg => arg.Value is ITypeInstance<IType> || arg.Value is IType)
-                        .ToList();
-                    foreach (var arg in argumentList)
+                    if (!failedArguments.Any())
                     {
-                        if (arg.Item2 is Type argType)
-                        {
-                            if (
-                                typeAttributeArguments.All(t =>
-                                    t.Name != arg.Item1
-                                    || t.Value is ITypeInstance<IType> typeInstance
-                                        && typeInstance.Type.FullName != argType.FullName
-                                    || t.Value is IType type && type.FullName != argType.FullName
-                                )
-                            )
-                            {
-                                goto NextAttribute;
-                            }
-                        }
-                        else if (!attributeArgs.Contains(arg))
-                        {
-                            goto NextAttribute;
-                        }
+                        yield return new ConditionResult(ruleType, true);
                     }
-
-                    return false;
-                    NextAttribute:
-                    ;
+                    else
+                    {
+                        var withArguments =
+                            failedArguments.Count == 1
+                                ? "with named argument"
+                                : "with named arguments";
+                        var arguments = failedArguments.Select(arg =>
+                            $"\"{arg.Item1}={arg.Item2}\""
+                        );
+                        var argumentsDescription = string.Join(" and ", arguments);
+                        var failDescription =
+                            $"does have attribute \"{resolvedAttribute.FullName}\" {withArguments} {argumentsDescription}";
+                        yield return new ConditionResult(ruleType, false, failDescription);
+                    }
                 }
-
-                return true;
             }
 
-            return new ArchitectureCondition<TRuleType>(Condition, description, failDescription);
+            var description = namedArgumentList.FormatDescription(
+                $"not have attribute \"{attributeFullName}\" with any of no named arguments (always true)",
+                $"not have attribute \"{attributeFullName}\" with named argument",
+                $"not have attribute \"{attributeFullName}\" with named arguments",
+                elementDescription: arg => $"\"{arg.Item1}={arg.Item2}\""
+            );
+            return new OrderedArchitectureCondition<TRuleType>(Condition, description);
         }
 
-        public static ICondition<TRuleType> NotHaveAttributeWithNamedArguments(
-            [NotNull] Type attribute,
-            IEnumerable<(string, object)> attributeArguments
-        )
-        {
-            string description,
-                failDescription;
-            var argumentList = attributeArguments.ToList();
-            if (argumentList.IsNullOrEmpty())
-            {
-                description = "not have attribute \"" + attribute.FullName + "\"";
-                failDescription = "does have attribute \"" + attribute.FullName + "\"";
-            }
-            else
-            {
-                var firstArgument = argumentList.First();
-                description = argumentList
-                    .Where(att => att != firstArgument)
-                    .Aggregate(
-                        "not have attribute \""
-                            + attribute.FullName
-                            + "\" with named arguments \""
-                            + firstArgument.Item1
-                            + "="
-                            + firstArgument.Item2
-                            + "\"",
-                        (current, arg) => current + " and \"" + arg.Item1 + "=" + arg.Item2 + "\""
-                    );
-                failDescription = argumentList
-                    .Where(att => att != firstArgument)
-                    .Aggregate(
-                        "does have attribute \""
-                            + attribute.FullName
-                            + "\" with named arguments \""
-                            + firstArgument.Item1
-                            + "="
-                            + firstArgument.Item2
-                            + "\"",
-                        (current, arg) => current + " and \"" + arg.Item1 + "=" + arg.Item2 + "\""
-                    );
-            }
-
-            bool Condition(TRuleType obj, Architecture architecture)
-            {
-                Attribute archUnitAttribute;
-                try
-                {
-                    archUnitAttribute = architecture.GetAttributeOfType(attribute);
-                }
-                catch (TypeDoesNotExistInArchitecture)
-                {
-                    //can't have a dependency
-                    return true;
-                }
-
-                foreach (var attributeInstance in obj.AttributeInstances)
-                {
-                    if (!attributeInstance.Type.Equals(archUnitAttribute))
-                    {
-                        goto NextAttribute;
-                    }
-
-                    var attributeArgs = attributeInstance
-                        .AttributeArguments.OfType<AttributeNamedArgument>()
-                        .Select(arg => (arg.Name, arg.Value))
-                        .ToList();
-                    var typeAttributeArguments = attributeArgs
-                        .Where(arg => arg.Value is ITypeInstance<IType> || arg.Value is IType)
-                        .ToList();
-                    foreach (var arg in argumentList)
-                    {
-                        if (arg.Item2 is Type argType)
-                        {
-                            if (
-                                typeAttributeArguments.All(t =>
-                                    t.Name != arg.Item1
-                                    || t.Value is ITypeInstance<IType> typeInstance
-                                        && typeInstance.Type.FullName != argType.FullName
-                                    || t.Value is IType type && type.FullName != argType.FullName
-                                )
-                            )
-                            {
-                                goto NextAttribute;
-                            }
-                        }
-                        else if (!attributeArgs.Contains(arg))
-                        {
-                            goto NextAttribute;
-                        }
-                    }
-
-                    return false;
-                    NextAttribute:
-                    ;
-                }
-
-                return true;
-            }
-
-            return new ArchitectureCondition<TRuleType>(Condition, description, failDescription);
-        }
-
-        public static ICondition<TRuleType> NotHaveName(string name)
+        public static IOrderedCondition<TRuleType> NotHaveName(string name)
         {
             return new SimpleCondition<TRuleType>(
                 obj => !obj.NameEquals(name),
@@ -1732,7 +1151,7 @@ namespace ArchUnitNET.Fluent.Syntax.Elements
             );
         }
 
-        public static ICondition<TRuleType> NotHaveNameMatching(string pattern)
+        public static IOrderedCondition<TRuleType> NotHaveNameMatching(string pattern)
         {
             return new SimpleCondition<TRuleType>(
                 obj => !obj.NameMatches(pattern),
@@ -1741,7 +1160,7 @@ namespace ArchUnitNET.Fluent.Syntax.Elements
             );
         }
 
-        public static ICondition<TRuleType> NotHaveNameStartingWith(string pattern)
+        public static IOrderedCondition<TRuleType> NotHaveNameStartingWith(string pattern)
         {
             return new SimpleCondition<TRuleType>(
                 obj => !obj.NameStartsWith(pattern),
@@ -1750,7 +1169,7 @@ namespace ArchUnitNET.Fluent.Syntax.Elements
             );
         }
 
-        public static ICondition<TRuleType> NotHaveNameEndingWith(string pattern)
+        public static IOrderedCondition<TRuleType> NotHaveNameEndingWith(string pattern)
         {
             return new SimpleCondition<TRuleType>(
                 obj => !obj.NameEndsWith(pattern),
@@ -1759,7 +1178,7 @@ namespace ArchUnitNET.Fluent.Syntax.Elements
             );
         }
 
-        public static ICondition<TRuleType> NotHaveNameContaining(string pattern)
+        public static IOrderedCondition<TRuleType> NotHaveNameContaining(string pattern)
         {
             return new SimpleCondition<TRuleType>(
                 obj => !obj.NameContains(pattern),
@@ -1768,7 +1187,7 @@ namespace ArchUnitNET.Fluent.Syntax.Elements
             );
         }
 
-        public static ICondition<TRuleType> NotHaveFullName(string fullName)
+        public static IOrderedCondition<TRuleType> NotHaveFullName(string fullName)
         {
             return new SimpleCondition<TRuleType>(
                 obj => !obj.FullNameEquals(fullName),
@@ -1777,7 +1196,7 @@ namespace ArchUnitNET.Fluent.Syntax.Elements
             );
         }
 
-        public static ICondition<TRuleType> NotHaveFullNameMatching(string pattern)
+        public static IOrderedCondition<TRuleType> NotHaveFullNameMatching(string pattern)
         {
             return new SimpleCondition<TRuleType>(
                 obj => !obj.FullNameMatches(pattern),
@@ -1786,7 +1205,7 @@ namespace ArchUnitNET.Fluent.Syntax.Elements
             );
         }
 
-        public static ICondition<TRuleType> NotHaveFullNameStartingWith(string pattern)
+        public static IOrderedCondition<TRuleType> NotHaveFullNameStartingWith(string pattern)
         {
             return new SimpleCondition<TRuleType>(
                 obj => !obj.FullNameStartsWith(pattern),
@@ -1795,7 +1214,7 @@ namespace ArchUnitNET.Fluent.Syntax.Elements
             );
         }
 
-        public static ICondition<TRuleType> NotHaveFullNameEndingWith(string pattern)
+        public static IOrderedCondition<TRuleType> NotHaveFullNameEndingWith(string pattern)
         {
             return new SimpleCondition<TRuleType>(
                 obj => !obj.FullNameEndsWith(pattern),
@@ -1804,7 +1223,7 @@ namespace ArchUnitNET.Fluent.Syntax.Elements
             );
         }
 
-        public static ICondition<TRuleType> NotHaveFullNameContaining(string pattern)
+        public static IOrderedCondition<TRuleType> NotHaveFullNameContaining(string pattern)
         {
             return new SimpleCondition<TRuleType>(
                 obj => !obj.FullNameContains(pattern),
@@ -1813,7 +1232,7 @@ namespace ArchUnitNET.Fluent.Syntax.Elements
             );
         }
 
-        public static ICondition<TRuleType> NotHaveAssemblyQualifiedName(
+        public static IOrderedCondition<TRuleType> NotHaveAssemblyQualifiedName(
             string assemblyQualifiedName
         )
         {
@@ -1824,7 +1243,9 @@ namespace ArchUnitNET.Fluent.Syntax.Elements
             );
         }
 
-        public static ICondition<TRuleType> NotHaveAssemblyQualifiedNameMatching(string pattern)
+        public static IOrderedCondition<TRuleType> NotHaveAssemblyQualifiedNameMatching(
+            string pattern
+        )
         {
             return new SimpleCondition<TRuleType>(
                 obj => !obj.AssemblyQualifiedNameMatches(pattern),
@@ -1833,7 +1254,9 @@ namespace ArchUnitNET.Fluent.Syntax.Elements
             );
         }
 
-        public static ICondition<TRuleType> NotHaveAssemblyQualifiedNameStartingWith(string pattern)
+        public static IOrderedCondition<TRuleType> NotHaveAssemblyQualifiedNameStartingWith(
+            string pattern
+        )
         {
             return new SimpleCondition<TRuleType>(
                 obj => !obj.AssemblyQualifiedNameStartsWith(pattern),
@@ -1842,7 +1265,9 @@ namespace ArchUnitNET.Fluent.Syntax.Elements
             );
         }
 
-        public static ICondition<TRuleType> NotHaveAssemblyQualifiedNameEndingWith(string pattern)
+        public static IOrderedCondition<TRuleType> NotHaveAssemblyQualifiedNameEndingWith(
+            string pattern
+        )
         {
             return new SimpleCondition<TRuleType>(
                 obj => !obj.AssemblyQualifiedNameEndsWith(pattern),
@@ -1851,7 +1276,9 @@ namespace ArchUnitNET.Fluent.Syntax.Elements
             );
         }
 
-        public static ICondition<TRuleType> NotHaveAssemblyQualifiedNameContaining(string pattern)
+        public static IOrderedCondition<TRuleType> NotHaveAssemblyQualifiedNameContaining(
+            string pattern
+        )
         {
             return new SimpleCondition<TRuleType>(
                 obj => !obj.AssemblyQualifiedNameContains(pattern),
@@ -1860,7 +1287,7 @@ namespace ArchUnitNET.Fluent.Syntax.Elements
             );
         }
 
-        public static ICondition<TRuleType> NotBePrivate()
+        public static IOrderedCondition<TRuleType> NotBePrivate()
         {
             return new SimpleCondition<TRuleType>(
                 obj => obj.Visibility != Private,
@@ -1869,7 +1296,7 @@ namespace ArchUnitNET.Fluent.Syntax.Elements
             );
         }
 
-        public static ICondition<TRuleType> NotBePublic()
+        public static IOrderedCondition<TRuleType> NotBePublic()
         {
             return new SimpleCondition<TRuleType>(
                 obj => obj.Visibility != Public,
@@ -1878,7 +1305,7 @@ namespace ArchUnitNET.Fluent.Syntax.Elements
             );
         }
 
-        public static ICondition<TRuleType> NotBeProtected()
+        public static IOrderedCondition<TRuleType> NotBeProtected()
         {
             return new SimpleCondition<TRuleType>(
                 obj => obj.Visibility != Protected,
@@ -1887,7 +1314,7 @@ namespace ArchUnitNET.Fluent.Syntax.Elements
             );
         }
 
-        public static ICondition<TRuleType> NotBeInternal()
+        public static IOrderedCondition<TRuleType> NotBeInternal()
         {
             return new SimpleCondition<TRuleType>(
                 obj => obj.Visibility != Internal,
@@ -1896,7 +1323,7 @@ namespace ArchUnitNET.Fluent.Syntax.Elements
             );
         }
 
-        public static ICondition<TRuleType> NotBeProtectedInternal()
+        public static IOrderedCondition<TRuleType> NotBeProtectedInternal()
         {
             return new SimpleCondition<TRuleType>(
                 obj => obj.Visibility != ProtectedInternal,
@@ -1905,7 +1332,7 @@ namespace ArchUnitNET.Fluent.Syntax.Elements
             );
         }
 
-        public static ICondition<TRuleType> NotBePrivateProtected()
+        public static IOrderedCondition<TRuleType> NotBePrivateProtected()
         {
             return new SimpleCondition<TRuleType>(
                 obj => obj.Visibility != PrivateProtected,

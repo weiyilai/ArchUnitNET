@@ -66,7 +66,7 @@ namespace ArchUnitNET.Fluent
             }
         }
 
-        public void AddCondition(ICondition<T> condition)
+        public void AddCondition(IOrderedCondition<T> condition)
         {
             _conditionElements.Last().SetCondition(condition);
         }
@@ -106,55 +106,32 @@ namespace ArchUnitNET.Fluent
             var filteredObjectsList = filteredObjects.ToList();
             if (filteredObjectsList.IsNullOrEmpty() && !CheckEmpty())
             {
-                yield return new EvaluationResult(
-                    null,
-                    new StringIdentifier(""),
-                    false,
-                    "There are no objects matching the criteria",
-                    archRuleCreator,
-                    architecture
-                );
-                yield break;
+                return new[]
+                {
+                    new EvaluationResult(
+                        null,
+                        new StringIdentifier(""),
+                        false,
+                        "There are no objects matching the criteria",
+                        archRuleCreator,
+                        architecture
+                    ),
+                };
             }
 
-            //rough heuristic - if we have small number of comparisons, we are fine with sequential search
-            //but in large cases its quadratic behavior becomes too slow and building of a dictionary is justified
-            if (filteredObjectsList.Count * _conditionElements.Count > 256)
-            {
-                var conditionResults = _conditionElements
-                    .Select(conditionElement =>
-                        conditionElement
-                            .Check(filteredObjectsList, architecture)
-                            .ToDictionary(x => x.ConditionResult.AnalyzedObject)
-                    )
-                    .ToList();
-
-                foreach (var t in filteredObjectsList)
-                {
-                    yield return CreateEvaluationResult(
-                        FindResultsForObject(conditionResults, t),
+            var conditionResults = _conditionElements
+                .Select(conditionElement =>
+                    conditionElement.Check(filteredObjectsList, architecture).ToList()
+                )
+                .ToList();
+            return filteredObjectsList.Select(
+                (t, i) =>
+                    CreateEvaluationResult(
+                        conditionResults.Select(results => results[i]),
                         architecture,
                         archRuleCreator
-                    );
-                }
-            }
-            else
-            {
-                var conditionResults = _conditionElements
-                    .Select(conditionElement =>
-                        conditionElement.Check(filteredObjectsList, architecture).ToList()
                     )
-                    .ToList();
-
-                foreach (var t in filteredObjectsList)
-                {
-                    yield return CreateEvaluationResult(
-                        FindResultsForObject(conditionResults, t),
-                        architecture,
-                        archRuleCreator
-                    );
-                }
-            }
+            );
         }
 
         private IEnumerable<ConditionElementResult> FindResultsForObject(
@@ -275,7 +252,7 @@ namespace ArchUnitNET.Fluent
             where T : ICanBeAnalyzed
         {
             private readonly LogicalConjunction _logicalConjunction;
-            private ICondition<T> _condition;
+            private IOrderedCondition<T> _condition;
 
             [CanBeNull]
             private string _customDescription;
@@ -322,7 +299,7 @@ namespace ArchUnitNET.Fluent
                 _reason = "because " + reason;
             }
 
-            public void SetCondition(ICondition<T> condition)
+            public void SetCondition(IOrderedCondition<T> condition)
             {
                 _condition = condition;
             }

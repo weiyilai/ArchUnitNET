@@ -16,11 +16,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
       - name: Setup .NET
         uses: actions/setup-dotnet@d4c94342e560b34958eacfc5d055d21461ed1c5d # v5.0.0
         with:
-          dotnet-version: 9.0.305
+          dotnet-version: 10.0.100
       - name: Install tools
         run: dotnet tool restore
       - name: Check formatting
@@ -30,11 +30,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
       - name: Setup .NET
         uses: actions/setup-dotnet@d4c94342e560b34958eacfc5d055d21461ed1c5d # v5.0.0
         with:
-          dotnet-version: 9.0.305
+          dotnet-version: 10.0.100
       - name: Run tests
         run: dotnet test -c Debug --collect:"XPlat Code Coverage" --settings coverlet.runsettings ArchUnitNETTests/
       - name: Upload coverage reports to Codecov
@@ -49,11 +49,11 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
       - name: Setup .NET
         uses: actions/setup-dotnet@d4c94342e560b34958eacfc5d055d21461ed1c5d # v5.0.0
         with:
-          dotnet-version: 9.0.305
+          dotnet-version: 10.0.100
       - name: Run tests
         run: dotnet test -c Debug
   publish-docs:
@@ -67,35 +67,35 @@ jobs:
       contents: write
     steps:
       - name: Checkout
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-      - name: Setup doxygen
-        run: sudo apt-get install doxygen graphviz
-      - name: Create temporary directory
-        run: |
-          tmpdir=$(mktemp -d -p "$GITHUB_WORKSPACE")
-          mkdir -p $tmpdir
-          relative_path=$(realpath --relative-to="$GITHUB_WORKSPACE" "$tmpdir")
-          echo "Created temporary directory $tmpdir ($relative_path relative to $GITHUB_WORKSPACE)"
-          echo "DOCS_TEMP_DIR=$relative_path" >> "$GITHUB_ENV"
-          if [[ "$GITHUB_REF" =~ ^"refs/tags/"[0-9]+.[0-9]+.[0-9]+$ ]]; then
-            echo "DOCS_TEMP_DIR_SUBPATH=stable" >> "$GITHUB_ENV"
-          else 
-            if [[ "$GITHUB_REF" =~ ^"refs/tags/"[0-9]+.[0-9]+.[0-9]+-[a-z]+.[0-9]+$ ]]; then
-              echo "DOCS_TEMP_DIR_SUBPATH=preview" >> "$GITHUB_ENV"
-            else
-              echo "DOCS_TEMP_DIR_SUBPATH=latest" >> "$GITHUB_ENV"
-            fi
-          fi
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        with:
+          path: ./current
       - name: Checkout gh-pages branch
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
         with:
           ref: gh-pages
-          path: ${{ env.DOCS_TEMP_DIR }}
-      - name: Generate documentation
-        working-directory: ${{ env.DOCS_TEMP_DIR }}/${{ env.DOCS_TEMP_DIR_SUBPATH }}
+          path: ./docs
+      - name: Setup doxygen
+        run: sudo apt-get install doxygen graphviz
+      - name: Setup environment
         run: |
-          rm -rf '*' 
-          doxygen "$GITHUB_WORKSPACE/documentation/Doxyfile"
+          if [[ "$GITHUB_REF" =~ ^"refs/tags/"[0-9]+.[0-9]+.[0-9]+$ ]]; then
+            docs_subpath="stable"
+          else 
+            if [[ "$GITHUB_REF" =~ ^"refs/tags/"[0-9]+.[0-9]+.[0-9]+-[a-z]+.[0-9]+$ ]]; then
+              docs_subpath="preview"
+            else
+              docs_subpath="latest"
+            fi
+          fi
+          echo "DOCS_TEMP_DIR_SUBPATH=$docs_subpath" >> "$GITHUB_ENV"
+          echo "DOCS_OUTPUT_DIR=$GITHUB_WORKSPACE/docs/$docs_subpath" >> "$GITHUB_ENV"
+      - name: Generate documentation
+        working-directory: ./current/documentation
+        run: |
+          set -eo pipefail
+          rm -rf "${{ env.DOCS_OUTPUT_DIR }}"
+          doxygen
           touch .nojekyll
       - name: Check release conditions
         run: |
@@ -106,7 +106,7 @@ jobs:
           fi
       - name: Commit and push changes
         if: env.CREATE_RELEASE == 'true'
-        working-directory: ${{ env.DOCS_TEMP_DIR }}
+        working-directory: ./docs
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "publish-docs@github.com"
@@ -119,6 +119,7 @@ jobs:
           fi
       - name: Update readthedocs preview
         if: env.CREATE_RELEASE == 'true' && env.DOCS_TEMP_DIR_SUBPATH == 'preview'
+        working-directory: ./docs
         run: |
           git fetch origin preview
           git checkout preview
@@ -135,11 +136,11 @@ jobs:
       - run-tests
     steps:
       - name: Checkout
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
       - name: Setup .NET
         uses: actions/setup-dotnet@d4c94342e560b34958eacfc5d055d21461ed1c5d # v5.0.0
         with:
-          dotnet-version: 9.0.305
+          dotnet-version: 10.0.100
       - name: Build
         run: dotnet build -c Release
       - name: Pack
