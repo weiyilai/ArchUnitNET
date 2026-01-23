@@ -62,7 +62,7 @@ Description: TypeDependencyNamespace.BaseClass passed
 Message: 
 All Evaluations passed
 
-Query: Types that are "TypeDependencyNamespace.BaseClass" should not have assembly qualified name "TypeDependencyNamespace.ChildClass, DependencyAssembly, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"
+Query: Types that are "TypeDependencyNamespace.BaseClass" should not have assembly qualified name "TypeDependencyNamespace.ChildClass, DependencyAssembly, Version=1.0.0.0, Culture=neutral, PublicKeyToken=015ff5fd...
 Result: True
 Description: TypeDependencyNamespace.BaseClass passed
 Message: 
@@ -370,48 +370,48 @@ Message:
 
 
 
-Query: Types that are "TypeDependencyNamespace.BaseClass" should not have assembly qualified name "TypeDependencyNamespace.BaseClass, DependencyAssembly, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"
+Query: Types that are "TypeDependencyNamespace.BaseClass" should not have assembly qualified name "TypeDependencyNamespace.BaseClass, DependencyAssembly, Version=1.0.0.0, Culture=neutral, PublicKeyToken=015ff5fd0...
 Result: False
-Description: TypeDependencyNamespace.BaseClass does have assembly qualified name TypeDependencyNamespace.BaseClass, DependencyAssembly, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
+Description: TypeDependencyNamespace.BaseClass does have assembly qualified name TypeDependencyNamespace.BaseClass, DependencyAssembly, Version=1.0.0.0, Culture=neutral, PublicKeyToken=015ff5fd0dc0bfa4
 Message: 
-"Types that are "TypeDependencyNamespace.BaseClass" should not have assembly qualified name "TypeDependencyNamespace.BaseClass, DependencyAssembly, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"" failed:
-	TypeDependencyNamespace.BaseClass does have assembly qualified name TypeDependencyNamespace.BaseClass, DependencyAssembly, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
+"Types that are "TypeDependencyNamespace.BaseClass" should not have assembly qualified name "TypeDependencyNamespace.BaseClass, DependencyAssembly, Version=1.0.0.0, Culture=neutral, PublicKeyToken=015ff5fd0..." failed:
+	TypeDependencyNamespace.BaseClass does have assembly qualified name TypeDependencyNamespace.BaseClass, DependencyAssembly, Version=1.0.0.0, Culture=neutral, PublicKeyToken=015ff5fd0dc0bfa4
 
 
 
 Query: Types that are "TypeDependencyNamespace.BaseClass" should not have assembly qualified name matching "^.*\.Base.*$"
 Result: False
-Description: TypeDependencyNamespace.BaseClass does have assembly qualified name TypeDependencyNamespace.BaseClass, DependencyAssembly, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
+Description: TypeDependencyNamespace.BaseClass does have assembly qualified name TypeDependencyNamespace.BaseClass, DependencyAssembly, Version=1.0.0.0, Culture=neutral, PublicKeyToken=015ff5fd0dc0bfa4
 Message: 
 "Types that are "TypeDependencyNamespace.BaseClass" should not have assembly qualified name matching "^.*\.Base.*$"" failed:
-	TypeDependencyNamespace.BaseClass does have assembly qualified name TypeDependencyNamespace.BaseClass, DependencyAssembly, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
+	TypeDependencyNamespace.BaseClass does have assembly qualified name TypeDependencyNamespace.BaseClass, DependencyAssembly, Version=1.0.0.0, Culture=neutral, PublicKeyToken=015ff5fd0dc0bfa4
 
 
 
 Query: Types that are "TypeDependencyNamespace.BaseClass" should not have assembly qualified name starting with "TypeDependencyNamespace"
 Result: False
-Description: TypeDependencyNamespace.BaseClass does have assembly qualified name TypeDependencyNamespace.BaseClass, DependencyAssembly, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
+Description: TypeDependencyNamespace.BaseClass does have assembly qualified name TypeDependencyNamespace.BaseClass, DependencyAssembly, Version=1.0.0.0, Culture=neutral, PublicKeyToken=015ff5fd0dc0bfa4
 Message: 
 "Types that are "TypeDependencyNamespace.BaseClass" should not have assembly qualified name starting with "TypeDependencyNamespace"" failed:
-	TypeDependencyNamespace.BaseClass does have assembly qualified name TypeDependencyNamespace.BaseClass, DependencyAssembly, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
+	TypeDependencyNamespace.BaseClass does have assembly qualified name TypeDependencyNamespace.BaseClass, DependencyAssembly, Version=1.0.0.0, Culture=neutral, PublicKeyToken=015ff5fd0dc0bfa4
 
 
 
-Query: Types that are "TypeDependencyNamespace.BaseClass" should not have assembly qualified name ending with "DependencyAssembly, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"
+Query: Types that are "TypeDependencyNamespace.BaseClass" should not have assembly qualified name ending with "DependencyAssembly, Version=1.0.0.0, Culture=neutral, PublicKeyToken=015ff5fd0dc0bfa4"
 Result: False
-Description: TypeDependencyNamespace.BaseClass does have assembly qualified name TypeDependencyNamespace.BaseClass, DependencyAssembly, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
+Description: TypeDependencyNamespace.BaseClass does have assembly qualified name TypeDependencyNamespace.BaseClass, DependencyAssembly, Version=1.0.0.0, Culture=neutral, PublicKeyToken=015ff5fd0dc0bfa4
 Message: 
-"Types that are "TypeDependencyNamespace.BaseClass" should not have assembly qualified name ending with "DependencyAssembly, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"" failed:
-	TypeDependencyNamespace.BaseClass does have assembly qualified name TypeDependencyNamespace.BaseClass, DependencyAssembly, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
+"Types that are "TypeDependencyNamespace.BaseClass" should not have assembly qualified name ending with "DependencyAssembly, Version=1.0.0.0, Culture=neutral, PublicKeyToken=015ff5fd0dc0bfa4"" failed:
+	TypeDependencyNamespace.BaseClass does have assembly qualified name TypeDependencyNamespace.BaseClass, DependencyAssembly, Version=1.0.0.0, Culture=neutral, PublicKeyToken=015ff5fd0dc0bfa4
 
 
 
 Query: Types that are "TypeDependencyNamespace.BaseClass" should not have assembly qualified name containing "TypeDependencyNamespace"
 Result: False
-Description: TypeDependencyNamespace.BaseClass does have assembly qualified name TypeDependencyNamespace.BaseClass, DependencyAssembly, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
+Description: TypeDependencyNamespace.BaseClass does have assembly qualified name TypeDependencyNamespace.BaseClass, DependencyAssembly, Version=1.0.0.0, Culture=neutral, PublicKeyToken=015ff5fd0dc0bfa4
 Message: 
 "Types that are "TypeDependencyNamespace.BaseClass" should not have assembly qualified name containing "TypeDependencyNamespace"" failed:
-	TypeDependencyNamespace.BaseClass does have assembly qualified name TypeDependencyNamespace.BaseClass, DependencyAssembly, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
+	TypeDependencyNamespace.BaseClass does have assembly qualified name TypeDependencyNamespace.BaseClass, DependencyAssembly, Version=1.0.0.0, Culture=neutral, PublicKeyToken=015ff5fd0dc0bfa4
 
 
 
@@ -509,10 +509,10 @@ Message:
 
 Query: Types that are "TypeDependencyNamespace.BaseClass" should be Types that do not have assembly qualified name "TypeDependencyNamespace.BaseClass, DependencyAssembly, Version=1.0.0.0, Culture=neutral, PublicK...
 Result: False
-Description: TypeDependencyNamespace.BaseClass is not Types that do not have assembly qualified name "TypeDependencyNamespace.BaseClass, DependencyAssembly, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"
+Description: TypeDependencyNamespace.BaseClass is not Types that do not have assembly qualified name "TypeDependencyNamespace.BaseClass, DependencyAssembly, Version=1.0.0.0, Culture=neutral, PublicKeyToken=015ff5...
 Message: 
 "Types that are "TypeDependencyNamespace.BaseClass" should be Types that do not have assembly qualified name "TypeDependencyNamespace.BaseClass, DependencyAssembly, Version=1.0.0.0, Culture=neutral, PublicK..." failed:
-	TypeDependencyNamespace.BaseClass is not Types that do not have assembly qualified name "TypeDependencyNamespace.BaseClass, DependencyAssembly, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"
+	TypeDependencyNamespace.BaseClass is not Types that do not have assembly qualified name "TypeDependencyNamespace.BaseClass, DependencyAssembly, Version=1.0.0.0, Culture=neutral, PublicKeyToken=015ff5...
 
 
 
@@ -534,12 +534,12 @@ Message:
 
 
 
-Query: Types that are "TypeDependencyNamespace.BaseClass" should be Types that do not have assembly qualified name ending with "DependencyAssembly, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"
+Query: Types that are "TypeDependencyNamespace.BaseClass" should be Types that do not have assembly qualified name ending with "DependencyAssembly, Version=1.0.0.0, Culture=neutral, PublicKeyToken=015ff5fd0dc0bfa4"
 Result: False
-Description: TypeDependencyNamespace.BaseClass is not Types that do not have assembly qualified name ending with "DependencyAssembly, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"
+Description: TypeDependencyNamespace.BaseClass is not Types that do not have assembly qualified name ending with "DependencyAssembly, Version=1.0.0.0, Culture=neutral, PublicKeyToken=015ff5fd0dc0bfa4"
 Message: 
-"Types that are "TypeDependencyNamespace.BaseClass" should be Types that do not have assembly qualified name ending with "DependencyAssembly, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"" failed:
-	TypeDependencyNamespace.BaseClass is not Types that do not have assembly qualified name ending with "DependencyAssembly, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"
+"Types that are "TypeDependencyNamespace.BaseClass" should be Types that do not have assembly qualified name ending with "DependencyAssembly, Version=1.0.0.0, Culture=neutral, PublicKeyToken=015ff5fd0dc0bfa4"" failed:
+	TypeDependencyNamespace.BaseClass is not Types that do not have assembly qualified name ending with "DependencyAssembly, Version=1.0.0.0, Culture=neutral, PublicKeyToken=015ff5fd0dc0bfa4"
 
 
 
@@ -671,11 +671,11 @@ Message:
 
 
 
-Query: Types that are "TypeDependencyNamespace.BaseClass" should be types that do not have assembly qualified name ending with "DependencyAssembly, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"
+Query: Types that are "TypeDependencyNamespace.BaseClass" should be types that do not have assembly qualified name ending with "DependencyAssembly, Version=1.0.0.0, Culture=neutral, PublicKeyToken=015ff5fd0dc0bfa4"
 Result: False
 Description: TypeDependencyNamespace.BaseClass is not "System.Object" or "System.Void" or "System.String" or "System.Collections.Generic.List`1" or "System.Runtime.CompilerServices.CompilerGeneratedAttribute" or "System.Runtime.CompilerServices.CompilationRelaxationsAttribute" or "System.Int32" or "System.Runtime.CompilerServices.RuntimeCompatibilityAttribute" or "System.Boolean" or "System.Diagnostics.DebuggableAttribute" or "System.Diagnostics.DebuggableAttribute+DebuggingModes" or "System.Runtime.Versioning.TargetFrameworkAttribute" or "System.Reflection.AssemblyCompanyAttribute" or "System.Reflection.AssemblyConfigurationAttribute" or "System.Reflection.AssemblyFileVersionAttribute" or "System.Reflection.AssemblyInformationalVersionAttribute" or "System.Reflection.AssemblyProductAttribute" or "System.Reflection.AssemblyTitleAttribute" or "System.Func`2" or "System.IntPtr" or "System.Linq.Enumerable" or "System.Collections.Generic.IEnumerable`1" or "System.Linq.IGrouping`2" or "System.Collections.Generic.IReadOnlyCollection`1" or "System.Collections.Generic.Dictionary`2"
 Message: 
-"Types that are "TypeDependencyNamespace.BaseClass" should be types that do not have assembly qualified name ending with "DependencyAssembly, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"" failed:
+"Types that are "TypeDependencyNamespace.BaseClass" should be types that do not have assembly qualified name ending with "DependencyAssembly, Version=1.0.0.0, Culture=neutral, PublicKeyToken=015ff5fd0dc0bfa4"" failed:
 	TypeDependencyNamespace.BaseClass is not "System.Object" or "System.Void" or "System.String" or "System.Collections.Generic.List`1" or "System.Runtime.CompilerServices.CompilerGeneratedAttribute" or "System.Runtime.CompilerServices.CompilationRelaxationsAttribute" or "System.Int32" or "System.Runtime.CompilerServices.RuntimeCompatibilityAttribute" or "System.Boolean" or "System.Diagnostics.DebuggableAttribute" or "System.Diagnostics.DebuggableAttribute+DebuggingModes" or "System.Runtime.Versioning.TargetFrameworkAttribute" or "System.Reflection.AssemblyCompanyAttribute" or "System.Reflection.AssemblyConfigurationAttribute" or "System.Reflection.AssemblyFileVersionAttribute" or "System.Reflection.AssemblyInformationalVersionAttribute" or "System.Reflection.AssemblyProductAttribute" or "System.Reflection.AssemblyTitleAttribute" or "System.Func`2" or "System.IntPtr" or "System.Linq.Enumerable" or "System.Collections.Generic.IEnumerable`1" or "System.Linq.IGrouping`2" or "System.Collections.Generic.IReadOnlyCollection`1" or "System.Collections.Generic.Dictionary`2"
 
 
